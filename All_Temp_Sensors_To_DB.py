@@ -514,7 +514,7 @@ def main():
             db_conn.close()
             sys.exit(0)
 
-        
+
     while all_sensors_list is None:
         all_sensors_list = find_all_temp_sensors_connected()
         if all_sensors_list is None:
@@ -537,6 +537,9 @@ def main():
                 print("***No info for sensor " + sensor_name + ", ignoring! Temp is " + str(read_temp(sensor_name)))
         loop_time = int(Global_dict['sensor_polling_freq'])
         print("\nThe next reading will be taken in " + str(int(round(loop_time / 60, 0))) + " minutes")
+        
+        with open('log.txt', 'a') as the_file:
+            the_file.write('Wrote temps, now looping\n')
         time.sleep(loop_time)
         os.system('clear')
     else:
@@ -551,5 +554,7 @@ signal.signal(signal.SIGINT, signal_handler)
 os.system('clear')
 #print("removing any existing sqlite DB")
 #os.remove("sqlite3.db")
-
+with open('log.txt', 'a') as the_file:
+    the_file.write('Starting Python code\n')
+    
 main()
