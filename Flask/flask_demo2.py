@@ -15,7 +15,7 @@ app = Flask(__name__)
 @app.route("/all_chart")
 def all_chart():
     #                              Location     DB Username   DB Passwd DB Name
-    db_conn = setup_db_connection("localhost", "temp_reader", "reader", "test")
+    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
         print("DB connection failed!")
@@ -36,7 +36,7 @@ def all_chart():
     else:
         print("OK - Table exists")
 
-    query = "SELECT * FROM test.TEMP_READINGS ORDER BY temp_id ASC"
+    query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id ASC"
     cursor.execute(query)
     id = []
     temperature = []
@@ -55,7 +55,7 @@ def all_chart():
 @app.route("/day_chart")
 def day_chart():
     #                              Location     DB Username   DB Passwd DB Name
-    db_conn = setup_db_connection("localhost", "temp_reader", "reader", "test")
+    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
         print("DB connection failed!")
@@ -77,8 +77,8 @@ def day_chart():
         print("OK - Table exists")
 
 
-    query = "SELECT date_added, temperature FROM test.TEMP_READINGS WHERE DAYOFMONTH(date_added) = DAYOFMONTH(NOW())"
-    #query = "SELECT * FROM test.TEMP_READINGS ORDER BY temp_id ASC"
+    query = "SELECT date_added, temperature FROM temps.TEMP_READINGS WHERE DAYOFMONTH(date_added) = DAYOFMONTH(NOW())"
+    #query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id ASC"
     
     cursor.execute(query)
     date = []
@@ -99,7 +99,7 @@ def day_chart():
 @app.route('/overview')
 def overview():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temp_reader", "reader", "test")
+        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -120,7 +120,7 @@ def overview():
         else:
             print("OK - Table exists")
 
-        query = "SELECT DATE_FORMAT(date_added, '%d/%m/%y'), MIN(temperature), ROUND(AVG(temperature), 1), MAX(temperature) FROM test.TEMP_READINGS GROUP BY DAYOFMONTH(date_added)"
+        query = "SELECT DATE_FORMAT(date_added, '%d/%m/%y'), MIN(temperature), ROUND(AVG(temperature), 1), MAX(temperature) FROM temps.TEMP_READINGS GROUP BY DAYOFMONTH(date_added)"
 
         output = run_query_and_dump_out_overview(cursor, query, "Date Added   Min  Avg  Max")
 
@@ -134,7 +134,7 @@ def overview():
 @app.route('/all')
 def all():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temp_reader", "reader", "test")
+        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -155,7 +155,7 @@ def all():
         else:
             print("OK - Table exists")
 
-        query = "SELECT * FROM test.TEMP_READINGS ORDER BY temp_id DESC"
+        query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id DESC"
 
         output = run_query_and_dump_all_db_data_out(cursor, query, "All data recorded to date (last first)")
 
@@ -167,7 +167,7 @@ def all():
 @app.route('/last')
 def last():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temp_reader", "reader", "test")
+        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -188,7 +188,7 @@ def last():
         else:
             print("OK - Table exists")
 
-        query = "SELECT * FROM test.TEMP_READINGS"
+        query = "SELECT * FROM temps.TEMP_READINGS"
     
         output = run_query_and_dump_last_entry_only(cursor, query, " id  datetime  sensor_id  sensor_name  temperature")
 
