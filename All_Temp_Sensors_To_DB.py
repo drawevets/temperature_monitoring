@@ -16,9 +16,9 @@ import time
 #os.system('modprobe w1-gpio')                              # load one wire communication device kernel modules
 #os.system('modprobe w1-therm')
 
-database_name = "test"
-database_user_name = "steve"
-database_password = "db_passwd"
+database_name = "temps"
+database_user_name = "temps_user"
+database_password = "user"
 
 Global_db_cursor = None
 Global_db_conn = None
@@ -179,6 +179,11 @@ def create_sensors_table_sqlite(db_conn, db_cursor):
   
 def setup_db_connection(host, db, user, passwd):
     print(">> setup_db_connection()")
+    print("Host: " + host)
+    print("DB: " + db)
+    print("user: " + user)
+    print("passwd: " + passwd)
+    
     try:
         db = MySQLdb.connect(host, user, passwd, db)
     except:
@@ -313,7 +318,7 @@ def write_temp_reading_to_db(db_conn, db_cursor, db_sensor_id, temp_reading):
 def reset_sensor_connected_status(db_conn, db_cursor):
     print(">> reset_sensor_connected_status()")
     try:
-        update_sql = "UPDATE test.TEMP_SENSORS SET connected = 0 WHERE sensor_id > 0"
+        update_sql = "UPDATE temps.TEMP_SENSORS SET connected = 0 WHERE sensor_id > 0"
         db_cursor.execute(update_sql)
         db_conn.commit()
         print("   reset sensor connected status for all OK")
@@ -329,7 +334,7 @@ def reset_sensor_connected_status(db_conn, db_cursor):
 
 def find_temp_sensor_id_and_offset(db_conn, db_cursor, sensor_id):
     print(">> find_temp_sensor_id_and_offset()")
-    query = "SELECT * FROM test.TEMP_SENSORS WHERE temp_sensor_id = '" + sensor_id + "'"
+    query = "SELECT * FROM temps.TEMP_SENSORS WHERE temp_sensor_id = '" + sensor_id + "'"
     db_cursor.execute(query)
     id = None
     temp_offset = 0
@@ -342,7 +347,7 @@ def find_temp_sensor_id_and_offset(db_conn, db_cursor, sensor_id):
         temp_offset = row[4]
         print("   Sensor info from DB: " + id + " " + date + " " + temp_sensor_id + " " + str(temp_offset))
         try:
-            update_sql = "UPDATE test.TEMP_SENSORS SET connected = 1 WHERE temp_sensor_id='" + temp_sensor_id + "'"
+            update_sql = "UPDATE temps.TEMP_SENSORS SET connected = 1 WHERE temp_sensor_id='" + temp_sensor_id + "'"
             db_cursor.execute(update_sql)
             db_conn.commit()
             print("   updated sensor connected status for " + temp_sensor_id)
@@ -358,7 +363,7 @@ def find_temp_sensor_id_and_offset(db_conn, db_cursor, sensor_id):
 
 
 def dump_all_db_data_out(db_cursor):
-    query = "SELECT * FROM test.TEMP_READINGS"
+    query = "SELECT * FROM temps.TEMP_READINGS"
     db_cursor.execute(query)
     print("Current database contents for TEMP_READINGS......")
     for row in db_cursor.fetchall():
@@ -470,6 +475,7 @@ def main():
 
     #Setup a Query
     #query = "SELECT * FROM test.temps WHERE date_of_reading < STR_TO_DATE('24/12/2018 17:00', '%d/%m/%Y %H:%i') "
+
 
     result = check_table_exists(cursor, "TEMP_APP_SETTINGS")
     if result is None:
