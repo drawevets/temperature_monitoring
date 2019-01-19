@@ -6,7 +6,6 @@ from flask import Flask
 from flask import render_template
 app = Flask(__name__)
 
-
 #Example of charting: https://www.patricksoftwareblog.com/creating-charts-with-chart-js-in-a-flask-application/
 #
 #For Chart.js source goto link:
@@ -50,50 +49,65 @@ def all_chart():
     legend = 'Temperatures'
     return render_template('chart.html', values=temperature, labels=id, legend=legend, title=title)
 
-
-
 @app.route("/day_chart")
 def day_chart():
     #                              Location     DB Username   DB Passwd DB Name
     db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
-        print("DB connection failed!")
-        #sys.exit(0)
-    else:
-        print("DB connection OK")
+        #print("DB connection failed!")
+        sys.exit(0)
+    #else:
+        #print("DB connection OK")
 
-    #Setup a 'Cursor' to the Database connection
     cursor = db_conn.cursor()
 
     result = check_table_exists(cursor, db_temp_readings_table)
 
     if result is None:
-        print("NO Table")
         cursor.close()
         db_conn.close()
         sys.exit(0)
-    else:
-        print("OK - Table exists")
+    #else:
+        #print("OK - Table exists")
 
-
-    query = "SELECT date_added, temperature FROM temps.TEMP_READINGS WHERE DAYOFMONTH(date_added) = DAYOFMONTH(NOW())"
-    #query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id ASC"
+    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW()) 
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
     
     cursor.execute(query)
-    date = []
-    temperature = []
+    date_1 = []
+    date_2 = []
+    date_3 = []
+    temps_1 = []
+    temps_2 = []
+    temps_3 = []
     for row in cursor.fetchall():
-        date.append(str(row[0]))
-        temperature.append(row[1])
+        if row[2] == 1:
+            legend1 = str(row[3])
+            date_1.append(str(row[0]))
+            temps_1.append(row[1])
+        if row[2] == 2:
+            legend2 = str(row[3])
+            date_2.append(str(row[0]))
+            temps_2.append(row[1])
+        if row[2] == 5:
+            legend3 = str(row[3])
+            date_3.append(str(row[0]))
+            temps_3.append(row[1])
     cursor.close()
     db_conn.close()
 
-    title = 'Temperatures Today'
-    legend = 'Temperatures'
-    return render_template('chart.html', values=temperature, labels=date, legend=legend, title=title)
+    title = 'All Temperature Sensor Readings Today'
+    return render_template('chart.html', values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
 
- 
 
 @app.route('/')
 @app.route('/overview')
@@ -129,8 +143,6 @@ def overview():
  
         return output
 
-
-
 @app.route('/all')
 def all():
         #                              Location     DB Username   DB Passwd DB Name
@@ -155,7 +167,8 @@ def all():
         else:
             print("OK - Table exists")
 
-        query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id DESC"
+        #query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id DESC"
+        query = "SELECT TEMP_READINGS.date_added, temp_sensor_alias, temperature FROM temps.TEMP_READINGS JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id ORDER BY temp_id DESC"
 
         output = run_query_and_dump_all_db_data_out(cursor, query, "All data recorded to date (last first)")
 
@@ -233,19 +246,17 @@ def run_query_and_dump_all_db_data_out(db_cursor, query, description):
     all_data = "<html>"
     all_data += "<h1>" + description + "</h1></br>"
     all_data += "<table style=""width:50%"">"
-    all_data += "<tr align=""center"" bgcolor=""#8990f7""><th>DB Table ID</th><th>DateTime</th><th>Sensor ID</th><th>Sensor Name</th><th>Temperature</th></tr>"
+
+    all_data += "<tr align=""center"" bgcolor=""#8990f7""><th>DateTime</th><th>Sensor Alias</th><th>Temperature</th></tr>"
     for row in db_cursor.fetchall():
         #print(row)
-        id = str(row[0])
-        datetime = str(row[1])
-        sensor_id = str(row[2])
-        sensor_name = str(row[3])
-        temperature = str(row[4])
+        datetime = str(row[0])
+        sensor_alias = str(row[1])
+        temperature = str(row[2])
+
         all_data = all_data + "<tr align=""center"" bgcolor=""#f1efff"" bordercolor=""black"">"
-        all_data = all_data + "<td>" + id + "</td>"
         all_data = all_data + "<td>" + datetime + "</td>"
-        all_data = all_data + "<td>" + sensor_id + "</td>"
-        all_data = all_data + "<td>" + sensor_name + "</td>"
+        all_data = all_data + "<td>" + sensor_alias + "</td>"
         all_data = all_data + "<td>" + temperature + "</td>"
         all_data = all_data + "</tr>"
     all_data += "</table>"
@@ -276,11 +287,10 @@ def run_query_and_dump_last_entry_only(db_cursor, query, description):
         id = str(row[0])
         datetime = str(row[1])
         sensor_id = str(row[2])
-        sensor_name = str(row[3])
-        temperature = str(row[4])
+        temperature = str(row[3])
     all_data = "<html><h1> The last temperature reading was: " + temperature + " degC @ " + datetime + "</h1></html>"
     return all_data
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)
