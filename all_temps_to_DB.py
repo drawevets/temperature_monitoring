@@ -3,6 +3,7 @@
 import datetime
 import os
 import glob
+from pathlib import Path
 import time
 import MySQLdb
 import sys
@@ -45,6 +46,24 @@ def write_to_log(text_to_write):
             logfile.close()
         except:
             print("Failed to open log.txt for writing")
+
+
+def clean_old_log_file():
+    now = datetime.datetime.now()
+    log_date = str(now.day) + str(now.month).zfill(2) + str(now.year) + "_" + str(now.hour).zfill(2) + str(now.minute).zfill(2)
+    logs_dir = Path("/home/steve/temperature_monitoring/logs")
+    log_file = Path("/home/steve/temperature_monitoring/log.txt")
+    if log_file.is_file():   
+        # log file exists
+        #print("log file exists")
+        os.system("gzip -q log.txt")
+        if logs_dir.is_dir():
+            #print("found logs dir")
+            os.system("mv -f log.txt.gz logs/log_" + log_date + ".gz")
+        else:
+            #print("making logs dir")
+            os.system("mkdir logs")
+            os.system("mv -f log.txt.gz logs/log_" + log_date + ".gz")
 
 
 def signal_handler(sig, frame):
@@ -560,5 +579,6 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 os.system('clear')
+clean_old_log_file()
 write_to_log("\n\n************  Started  -  all_temps_to_DB.py  ************\n")
 main()
