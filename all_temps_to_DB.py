@@ -204,11 +204,11 @@ def create_sensors_table_sqlite(db_conn, db_cursor):
     now = datetime.now() # current date and time
     date_time = now.strftime("%d/%m/%Y, %H:%M")
   
-    list_ = [(date_time, '28-020691770d70', 'Wired 0d70', 0, 0),
-             (date_time, '28-020b917749e4', 'Wired 49e4', -0.7, 0),
+    list_ = [(date_time, '28-020691770d70', 'Ambient 0d70', 0, 0),
+             (date_time, '28-020b917749e4', 'Monitor 49e4', -0.7, 0),
              (date_time, '28-02069177144d', 'Wired 144d', -0.8, 0), 
              (date_time, '28-0118679408ff', 'Bare 08ff', -0.4, 0), 
-             (date_time, '28-020a9177f3c4', 'Wired f3c4', -1.1, 0), 
+             (date_time, '28-020a9177f3c4', 'Raspberry PI f3c4', -1.1, 0), 
              (date_time, '28-020891777a83', 'Wired 7a83', -0.7, 0)]
     try:
         for data in list_:
@@ -271,11 +271,11 @@ def create_sensors_table(db_conn, db_cursor):
 
     db_cursor.execute(sql)
     sql = """INSERT INTO TEMP_SENSORS (date_added, temp_sensor_id, temp_sensor_alias, temp_offset, connected) 
-             VALUES (NOW(), '28-020691770d70', 'Wired 0d70', 0, 0), 
-             (NOW(), '28-020b917749e4', 'Wired 49e4', -0.7, 0), 
+             VALUES (NOW(), '28-020691770d70', 'Ambient 0d70', 0, 0), 
+             (NOW(), '28-020b917749e4', 'Monitor 49e4', -0.7, 0), 
              (NOW(), '28-02069177144d', 'Wired 144d', -0.8, 0), 
              (NOW(), '28-0118679408ff', 'Bare 08ff', -0.4, 0), 
-             (NOW(), '28-020a9177f3c4', 'Wired f3c4', -1.1, 0), 
+             (NOW(), '28-020a9177f3c4', 'Raspberry PI f3c4', -1.1, 0), 
              (NOW(), '28-020891777a83', 'Wired 7a83', -0.7, 0)"""
     try:
         db_cursor.execute(sql)
