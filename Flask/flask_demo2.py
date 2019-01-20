@@ -1,9 +1,14 @@
 #! /usr/bin/python3.5
 
 import MySQLdb
+#from all_temps_to_DB import find_all_temp_sensors_connected
+import glob
 
 from flask import Flask
 from flask import render_template
+
+import subprocess
+
 app = Flask(__name__)
 
 #Example of charting: https://www.patricksoftwareblog.com/creating-charts-with-chart-js-in-a-flask-application/
@@ -12,8 +17,19 @@ app = Flask(__name__)
 #https://github.com/chartjs/Chart.js/releases/latest
 
 @app.route("/")
+@app.route("/home")
 def home():
-    return("<html><h1>Home</h1></html>")
+    ssid, quality, level = check_wireless_network_connection()
+    all_sensors_list = find_all_temp_sensors_connected()
+    html_return = "<html><h1>Temperature Monitoring System Status Page</h1></br>"
+    html_return += "<h3>Wireless Network Connection SSID: " + ssid + "</h3>"
+    html_return += "<h3>Wireless Network Signal Quality:  " + str(quality) + "%</h3>"
+    html_return += "<h3>Wireless Network Signal Level:    " + str(level) + "dB</h3></br>"
+    html_return += "<h2>" + str(len(all_sensors_list)) + " sensors connected</h2>"
+    for sensor in all_sensors_list:
+        html_return += "<h3>" + sensor + "</h3>"
+    html_return += "</html>"
+    return(html_return)
 
 
 @app.route("/today_chart")
@@ -279,6 +295,62 @@ def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
 
     return no_of_sensors, sensor_ids
 
-    
+
+def find_all_temp_sensors_connected():
+    all_sensors_list = []
+    devices = glob.glob('/sys/bus/w1/devices/' + '28*')
+    #write_to_log(">> find_all_temp_sensors_connected()")
+    count = 0
+    if len(devices):
+        #write_to_log("   " + str(len(devices)) + " sensor(s) found:")
+        for count, sensor in enumerate(devices):
+            sensor_name = sensor.strip()[-15:]
+            #write_to_log("     " + sensor.strip()[-15:])
+            all_sensors_list.append(sensor_name)
+    else:
+        #write_to_log("   No Sensors found!")
+        all_sensors_list = None      
+    #write_to_log("<< find_all_temp_sensors_connected()")
+    return all_sensors_list
+
+
+def check_wireless_network_connection():
+    #write_to_log(">> check_wireless_network_connection()")
+    ssid = ''
+    quality = 0
+    level = 0
+    result = None
+    #ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        outbytes = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
+        output = str(outbytes)
+        find_start_of_ssid = output[output.find('ESSID:')+7:len(output)]
+        ssid = find_start_of_ssid[0:find_start_of_ssid.find('"')]
+        #write_to_log("   WiFi SSID: " + ssid)
+        result = 0
+    except subprocess.CalledProcessError:
+        # grep did not match any lines
+        print("ERROR    No wireless networks connected!!")
+
+    if result is not None:
+        ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
+        outbytes = subprocess.check_output(('grep', 'Quality'), stdin=ps.stdout)
+        output = str(outbytes)
+        pos = output.find('Quality=')
+        quality_str = output[pos+len('Quality='):len(output)]
+        quality_str = quality_str[0:2]
+        quality = int((float(quality_str) / 70.0) * 100.0)
+        #write_to_log("   WiFi Signal quality: " + str(quality) + "%")
+
+        pos = output.find('Signal level=')
+        level_str = output[pos+len('Signal level='):len(output)]
+        level_str = level_str[0:3]
+        level = int(level_str)
+        #write_to_log("   WiFi Signal Level: " + str(level) + "dBm")
+
+    #write_to_log("<< check_wireless_network_connection()")
+    return ssid, quality, level
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
