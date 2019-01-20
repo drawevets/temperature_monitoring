@@ -80,7 +80,7 @@ def day_chart():
         return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
     #print(sensor_list)
     
-    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),MINUTE(TEMP_READINGS.date_added)) as time_added, 
+    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
                       temperature, 
                       temp_sensor_db_id, 
                       temp_sensor_alias 
