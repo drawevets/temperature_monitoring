@@ -1,0 +1,69 @@
+##########################################################################################################
+#Python Extensions setup
+##########################################################################################################
+
+sudo pip3 install flask
+
+
+
+
+
+##########################################################################################################
+#Database Setup, User setup
+##########################################################################################################
+
+CREATE DATABASE temps;
+CREATE USER 'temps_user'@'localhost' IDENTIFIED BY 'user';
+CREATE USER 'temps_reader'@'localhost' IDENTIFIED BY 'reader';
+CREATE USER 'temps_admin'@'localhost' IDENTIFIED BY 'admin';
+
+GRANT SELECT, INSERT, UPDATE, CREATE ON temps.* TO 'temps_user'@'localhost' identified by 'user';
+GRANT SELECT ON temps.* TO 'temps_reader'@'localhost' identified by 'reader';
+GRANT SELECT, INSERT, UPDATE, CREATE, DROP ON temps.* TO 'temps_admin'@'localhost' identified by 'admin';
+COMMIT;
+
+
+
+
+
+
+
+##########################################################################################################
+#                                     U s e f u l   S t u f f                                            # 
+##########################################################################################################
+
+
+##########################################################################################################
+#Database deletion of everything
+##########################################################################################################
+
+USE temps;
+
+DROP USER 'temps_user'@'localhost';
+DROP USER 'temps_reader'@'localhost';
+DROP USER 'temps_admin'@'localhost';
+
+DROP TABLE TEMP_READINGS;
+DROP TABLE TEMP_APP_SETTINGS;
+DROP TABLE TEMP_SENSORS;
+COMMIT;
+
+
+##########################################################################################################
+#Checking all users in DB
+##########################################################################################################
+
+SELECT User,Host FROM mysql.user;
+
+
+##########################################################################################################
+#Checking tables and all data ok
+##########################################################################################################
+
+USE temps;
+SHOW TABLES;
+
+SELECT * FROM TEMP_APP_SETTINGS;
+SELECT * FROM TEMP_SENSORS;
+SELECT * FROM TEMP_READINGS;
+
