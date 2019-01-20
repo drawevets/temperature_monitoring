@@ -160,69 +160,6 @@ def read_temp(sensor_id):
     write_to_log("<< read_temp()")
 
 
-def setup_sqlite_db_connection(db_path_name):
-    write_to_log(">> setup_db_connection()")
-    try:
-        db = sqlite3.connect(db_path_name)
-    except:
-        write_to_log("***Database connection failed!")
-        db = None
-    write_to_log("<< setup_db_connection()")
-    return db
-
-
-def create_temp_readings_table_sqlite(db_cursor):
-    write_to_log("Creating table for temperature readings")
-    sql = """CREATE TABLE TEMP_READINGS (
-             temp_id integer NOT NULL PRIMARY KEY ASC,
-             date_added text NOT NULL,
-             temp_sensor_db_id integer,
-             temperature real NOT NULL )"""
-    if db_cursor.execute(sql) is None:
-        write_to_log("Temp readings table create failed!")
-        return None
-    else:
-        write_to_log("TEMP Table created OK")
-        return 0
-
-
-def create_sensors_table_sqlite(db_conn, db_cursor):
-    write_to_log("   Creating table for temperature sensors")
-    sql = """CREATE TABLE TEMP_SENSORS (
-             sensor_id integer NOT NULL PRIMARY KEY ASC,
-             date_added text NOT NULL,
-             temp_sensor_id text NOT NULL,
-             temp_sensor_alias text,
-             temp_offset real NOT NULL,
-             connected int NOT NULL )"""
-
-    if db_cursor.execute(sql) is None:
-        db_cursor.close()
-        db_conn.close()
-        sys.exit(0)
-
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%d/%m/%Y, %H:%M")
-  
-    list_ = [(date_time, '28-020691770d70', 'Ambient 0d70', 0, 0),
-             (date_time, '28-020b917749e4', 'Monitor 49e4', -0.7, 0),
-             (date_time, '28-02069177144d', 'Wired 144d', -0.8, 0), 
-             (date_time, '28-0118679408ff', 'Bare 08ff', -0.4, 0), 
-             (date_time, '28-020a9177f3c4', 'Raspberry PI f3c4', -1.1, 0), 
-             (date_time, '28-020891777a83', 'Wired 7a83', -0.7, 0)]
-    try:
-        for data in list_:
-            db_cursor.execute("INSERT INTO TEMP_SENSORS (date_added, temp_sensor_id, temp_sensor_alias, temp_offset, connected) VALUES(?,?,?,?,?)", (data))
-        db_conn.commit()
-        write_to_log("   TEMP_SENSORS table updated OK")
-    except:
-        db_conn.rollback()
-        write_to_log("   TEMP_SENSORS table update failed!!")
-        return None
-             
-    return 0
-
-  
 def setup_db_connection(host, db, user, passwd):
     write_to_log(">> setup_db_connection()")
 
@@ -314,7 +251,7 @@ def create_settings_table_and_set_defaults(db_conn, db_cursor):
 
     db_cursor.execute(sql)
     sql = """INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) 
-             VALUES ('sensor_polling_freq', '300', NOW()), 
+             VALUES ('sensor_polling_freq', '60', NOW()), 
                     ('write_to_logfile', 'true', NOW())"""
     try:
         db_cursor.execute(sql)
