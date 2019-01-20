@@ -1,130 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Temperatures</title>
-    <!-- import plugin script -->
-    <script src='static/Chart.min.js'></script>
-  </head>
-  <body>
-    <center><h1>{{title}}</h1></center>
+    <head>
+        <title>Temps</title>
+        <meta charset="utf-8" />
+        <!-- import plugin script -->
+        <script src='static/Chart.min.js'></script>
+    </head>
+    <body>
     <!-- chart canvas element -->
-    <canvas id="Temps_Chart" width="1920" height="1080"></canvas>
+    <canvas id="Temps_Chart" width="1920" height="1200"></canvas>
 
     <script>
-      // Global parameters:
-      // do not resize the chart canvas when its container does (keep at 600x400px)
-      Chart.defaults.global.responsive = true;
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+        Chart.defaults.global.responsive = true;
 
-      // define the chart data
-      var chartData = {
-        labels : [{% for item in labels %}
-                   "{{item}}",
-                  {% endfor %}],
-        datasets : [{
-            label: '{{ legend1 }}',
-            fill: false,
-            lineTension: 0.3,
-            backgroundColor: "rgba(75,192,192,0.4)",
-            borderColor: "rgba(75,192,192,1)",
-            borderCapStyle: 'butt',
-            borderDash: [],
-            borderDashOffset: 0.0,
-            borderJoinStyle: 'miter',
-            pointBorderColor: "rgba(75,192,192,1)",
-            pointBackgroundColor: "#fff",
-            pointBorderWidth: 7,
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: "rgba(75,192,192,1)",
-            pointHoverBorderColor: "rgba(220,220,220,1)",
-            pointHoverBorderWidth: 2,
-            pointRadius: 1,
-            pointHitRadius: 10,
-            data : [{% for item in values1 %}
-                      {{item}},
-                    {% endfor %}],
-            spanGaps: false
-        },
-        {
-            label: '{{ legend2 }}',
-            fill: false,
-            lineTension: 0.3,
-            backgroundColor: "rgba(225,50,50,0.3)",
-            borderColor: "rgba(225,50,50,1)",
-            borderCapStyle: 'butt',
-            borderDash: [],
-            borderDashOffset: 0.0,
-            borderJoinStyle: 'miter',
-            pointBorderColor: "rgba(225,50,50,1)",
-            pointBackgroundColor: "#fff",
-            pointBorderWidth: 7,
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: "rgba(225,50,50,1)",
-            pointHoverBorderColor: "rgba(220,220,220,1)",
-            pointHoverBorderWidth: 2,
-            pointRadius: 1,
-            pointHitRadius: 10,
-            data : [{% for item in values2 %}
-                      {{item}},
-                    {% endfor %}],
-            spanGaps: false
-        },
-        {
-            label: '{{ legend3 }}',
-            fill: false,
-            lineTension: 0.3,
-            backgroundColor: "rgba(50,50,225,0.3)",
-            borderColor: "rgba(50,50,225,1)",
-            borderCapStyle: 'butt',
-            borderDash: [],
-            borderDashOffset: 0.0,
-            borderJoinStyle: 'miter',
-            pointBorderColor: "rgba(50,50,225,1)",
-            pointBackgroundColor: "#fff",
-            pointBorderWidth: 7,
-            pointHoverRadius: 5,
-            pointHoverBackgroundColor: "rgba(50,50,225,1)",
-            pointHoverBorderColor: "rgba(220,220,220,1)",
-            pointHoverBorderWidth: 2,
-            pointRadius: 1,
-            pointHitRadius: 10,
-            data : [{% for item in values3 %}
-                      {{item}},
-                    {% endfor %}],
-            spanGaps: false
-        }]
-      }
-
-      // get chart canvas
-      var ctx = document.getElementById("Temps_Chart").getContext("2d");
-
-      // create the chart using the chart canvas
-      var myChart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options : {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: false
-                    },
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Temperature DegC'
-                    }
-                }],
-                xAxes: [{
-                    ticks: {
-                        beginAtZero: false
-                    },
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Time'
-                    }
-                }]
-            }
+        // define the chart data
+        var chartData = {
+            labels : [{% for item in labels %}
+                       "{{item}}",
+                      {% endfor %}],
+            datasets : [{
+                label: '{{ legend1 }}',
+                fill: false,
+                lineTension: 0.3,
+                backgroundColor: "rgba(75,192,192,0.4)",
+                borderColor: "rgba(75,192,192,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(75,192,192,1)",
+                pointBackgroundColor: "#fff",
+                pointBorderWidth: 7,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(75,192,192,1)",
+                pointHoverBorderColor: "rgba(220,220,220,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+                data : [{% for item in values1 %}
+                          {{item}},
+                        {% endfor %}],
+                spanGaps: false
+            },
+            {
+                label: '{{ legend2 }}',
+                fill: false,
+                lineTension: 0.3,
+                backgroundColor: "rgba(225,50,50,0.3)",
+                borderColor: "rgba(225,50,50,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(225,50,50,1)",
+                pointBackgroundColor: "#fff",
+                pointBorderWidth: 7,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(225,50,50,1)",
+                pointHoverBorderColor: "rgba(220,220,220,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+                data : [{% for item in values2 %}
+                          {{item}},
+                        {% endfor %}],
+                spanGaps: false
+            },
+            {
+                label: '{{ legend3 }}',
+                fill: false,
+                lineTension: 0.3,
+                backgroundColor: "rgba(50,50,225,0.3)",
+                borderColor: "rgba(50,50,225,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(50,50,225,1)",
+                pointBackgroundColor: "#fff",
+                pointBorderWidth: 7,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(50,50,225,1)",
+                pointHoverBorderColor: "rgba(220,220,220,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+                data : [{% for item in values3 %}
+                          {{item}},
+                        {% endfor %}],
+                spanGaps: false
+            }]
         }
-      });
+
+        // get chart canvas
+        var ctx = document.getElementById("Temps_Chart").getContext("2d");
+
+        // create the chart using the chart canvas
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options : {
+                title: {
+                    display: true,
+                    position: 'top',
+                    fontSize: 42,
+                    fontColor: '#020370',
+                    padding: 30,
+                    text: '{{title}}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        fontSize: 14,
+                        fontColor: 'rgb(30, 30, 30)',
+                        padding: 20,
+                        boxWidth: 20
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        bottom: 10
+                    }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            suggestedMin: 15,
+                            suggestedMax: 20,
+                            stepSize: 1,
+                            fontSize: 14,
+                            fontStyle: 'bold'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 14,
+                            fontStyle: 'normal',
+                            labelString: 'Temperature DegC'
+                        },
+                        gridLines: {
+                            tickMarkLength: 5,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            fontSize: 14,
+                            fontStyle: 'bold'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 13,
+                            fontStyle: 'normal',
+                            labelString: 'Time'
+                        },
+                        gridLines: {
+                            display: false,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                        },
+                    }]
+                }
+            }
+        });
     </script>
   </body>
 </html>

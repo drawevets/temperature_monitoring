@@ -11,46 +11,13 @@ app = Flask(__name__)
 #For Chart.js source goto link:
 #https://github.com/chartjs/Chart.js/releases/latest
 
-@app.route("/all_chart")
-def all_chart():
-    #                              Location     DB Username   DB Passwd DB Name
-    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
-    db_temp_readings_table = "TEMP_READINGS"
-    if db_conn is None:
-        print("DB connection failed!")
-        #sys.exit(0)
-    else:
-        print("DB connection OK")
+@app.route("/")
+def home():
+    return("<html><h1>Home</h1></html>")
 
-    #Setup a 'Cursor' to the Database connection
-    cursor = db_conn.cursor()
 
-    result = check_table_exists(cursor, db_temp_readings_table)
-
-    if result is None:
-        print("NO Table")
-        cursor.close()
-        db_conn.close()
-        sys.exit(0)
-    else:
-        print("OK - Table exists")
-
-    query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id ASC"
-    cursor.execute(query)
-    id = []
-    temperature = []
-    for row in cursor.fetchall():
-        id.append(str(row[1]))
-        temperature.append(row[4])
-    cursor.close()
-    db_conn.close()
-
-    title = 'All Recorded Temperatures'
-    legend = 'Temperatures'
-    return render_template('chart.html', values=temperature, labels=id, legend=legend, title=title)
-
-@app.route("/day_chart")
-def day_chart():
+@app.route("/today_chart")
+def today_chart():
     #                              Location     DB Username   DB Passwd DB Name
     db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"

@@ -495,6 +495,7 @@ def main():
         all_sensors_list = find_all_temp_sensors_connected()
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
+            time.sleep(5)
             
     settle_time = int(Global_dict['first_read_settle_time'])
     write_to_log("Waiting %d seconds for the initial readings" % settle_time)
