@@ -249,10 +249,19 @@ def create_settings_table_and_set_defaults(db_conn, db_cursor):
              last_updated DATETIME NOT NULL,
              PRIMARY KEY (settings_id) )"""
 
-    db_cursor.execute(sql)
+    try:
+        db_cursor.execute(sql)
+        db_conn.commit()
+        write_to_log("   TEMP_APP_SETTINGS table created OK")
+    except:
+        db_conn.rollback()
+        write_to_log("   TEMP_APP_SETTINGS table creation failed!!")
+        return None
+
     sql = """INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) 
              VALUES ('sensor_polling_freq', '60', NOW()), 
-                    ('write_to_logfile', 'true', NOW())"""
+                    ('write_to_logfile', 'true', NOW()),
+                    ('first_read_settle_time', '30', NOW())"""
     try:
         db_cursor.execute(sql)
         db_conn.commit()
@@ -486,7 +495,11 @@ def main():
         all_sensors_list = find_all_temp_sensors_connected()
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
-
+            
+    settle_time = int(Global_dict['first_read_settle_time'])
+    write_to_log("Waiting %d seconds for the initial readings" % settle_time)
+    time.sleep(settle_time)
+    
     while True:
         for sensor_name in all_sensors_list:
             db_sensor_id, offset = find_temp_sensor_id_and_offset(db_conn, cursor, sensor_name)      
