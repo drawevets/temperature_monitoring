@@ -55,22 +55,31 @@ def day_chart():
     db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
-        #print("DB connection failed!")
-        sys.exit(0)
-    #else:
-        #print("DB connection OK")
+        return("<html><h1>DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-
     result = check_table_exists(cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
         db_conn.close()
-        sys.exit(0)
-    #else:
-        #print("OK - Table exists")
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
 
+    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
+               GROUP BY temp_sensor_db_id"""
+
+    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    #print(sensor_list)
+    
     query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),MINUTE(TEMP_READINGS.date_added)) as time_added, 
                       temperature, 
                       temp_sensor_db_id, 
@@ -78,11 +87,12 @@ def day_chart():
                FROM temps.TEMP_READINGS 
                JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
                WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW()) 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
                AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
                AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
     
     cursor.execute(query)
+
     date_1 = []
     date_2 = []
     date_3 = []
@@ -292,5 +302,16 @@ def run_query_and_dump_last_entry_only(db_cursor, query, description):
     return all_data
 
 
+def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
+    db_cursor.execute(query_to_run)
+    no_of_sensors = db_cursor.rowcount
+
+    sensor_ids = []
+    for row in db_cursor.fetchall():
+        sensor_ids.append(row[0])
+
+    return no_of_sensors, sensor_ids
+
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
