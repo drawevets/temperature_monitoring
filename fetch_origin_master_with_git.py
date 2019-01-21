@@ -1,4 +1,5 @@
 #! /usr/bin/python3.5
+#Should probably add a check for network signal etc before attempting this in the real world??
 
 import sh
 from sh import git
