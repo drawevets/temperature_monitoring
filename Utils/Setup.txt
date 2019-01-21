@@ -7,8 +7,11 @@ sudo pip3 install sh
 
 
 ##########################################################################################################
-#Other supporting packages
+#Other setup and supporting packages
 ##########################################################################################################
+
+sudo apt-get update
+sudo apt-get upgrade
 
 sudo apt-get install mysql
 
