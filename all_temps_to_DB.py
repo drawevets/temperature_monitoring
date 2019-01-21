@@ -427,7 +427,7 @@ def get_local_ip_address():
 
 #############################################################################################################
 
-def main():
+def do_main():
     global Global_db_conn
     global Global_db_cursor
     global Global_dict
@@ -532,4 +532,4 @@ signal.signal(signal.SIGTERM, signal_handler)
 os.system('clear')
 clean_old_log_file()
 write_to_log("\n\n************  Started  -  all_temps_to_DB.py  ************\n")
-main()
+do_main()
