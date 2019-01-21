@@ -1,3 +1,5 @@
+#! /usr/bin/python3.5
+
 import sh
 from sh import git
 import time
@@ -35,7 +37,7 @@ def ProcessFetch(char, stdin):
 
 if __name__ == "__main__":
     checkTimeSec = 60
-    gitDir = "/home/steve/temperature_monitoring"
+    gitDir = "/home/steve/temperature_monitoring/"
     while True:
         print("*********** Checking for code update **************")                                                     
     
