@@ -1,8 +1,14 @@
 #! /usr/bin/python3.5
 #Should probably add a check for network signal etc before attempting this in the real world??
 
+###################################################################
+# https://amoffat.github.io/sh/index.html
+# sh - is a full-fledged subprocess replacement for Python
+#     that allows you to call any program as if it were a function:
 import sh
 from sh import git
+###################################################################
+
 import time
 import os, sys
 
