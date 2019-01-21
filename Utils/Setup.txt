@@ -31,9 +31,21 @@ GRANT SELECT, INSERT, UPDATE, CREATE, DROP ON temps.* TO 'temps_admin'@'localhos
 COMMIT;
 
 
+##########################################################################################################
+#Updates to /etc/rc.local
+##########################################################################################################
+Add:
+sudo ./home/steve/temperature_monitoring/start_temp_monitoring.sh
 
+##########################################################################################################
+#Updates to su cron for auto update checking
+##########################################################################################################
 
+sudo crontab -e 
 
+To check every day of month at 00:00, add:
+# m h  dom mon dow    Command
+  0 0  */1  *   *     ./home/steve/temperature_monitoring/run_git_fetch.sh
 
 
 ##########################################################################################################
