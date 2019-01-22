@@ -21,8 +21,12 @@ database_name = "temps"
 database_user_name = "temps_user"
 database_password = "user"
 
-email_user = "raspberrypi.emailsender1972@gmail.com"
-email_passwd = "Raspberry4P!"
+send_start_up_status_email = False
+
+email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
+email_passwd = "!P4yrrebpsaR"
+
+owner_email_addr = "moc.liamg@draws.rednef"
 
 Global_db_cursor = None
 Global_db_conn = None
@@ -430,6 +434,7 @@ def get_local_ip_address():
 
 
 def send_email(user, pwd, recipient, subject, body):
+    write_to_log(">> send_email()")
     FROM = user
     TO = recipient if isinstance(recipient, list) else [recipient]
     SUBJECT = subject
@@ -440,14 +445,19 @@ def send_email(user, pwd, recipient, subject, body):
     """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.ehlo()
-        server.starttls()
-        server.login(user, pwd)
+        status = server.ehlo()
+        write_to_log("       ehlo:  " + str(status))
+        status = server.starttls()
+        write_to_log("   starttls:  " + str(status))
+        status = server.login(user, pwd)
+        write_to_log(" user login:  " + str(status))
         server.sendmail(FROM, TO, message)
         server.close()
-        print 'successfully sent the mail'
+        write_to_log(" email sent OK")
     except:
-        print "failed to send mail"
+        write_to_log("****** failed to send email!!")
+
+    write_to_log("<< send_email()")
 
 #############################################################################################################
 
@@ -455,16 +465,16 @@ def do_main():
     global Global_db_conn
     global Global_db_cursor
     global Global_dict
-    
+
     all_sensors_list = None
     write_to_log("------------------------    Checking Network Connection OK   ------------------------")
     print("\n------------------------    Checking Network Connection OK   ------------------------\n")
     ssid, quality, level = check_wireless_network_connection()
     if ssid == '':
         sys.exit(0)
-    
+
     ip_address = get_local_ip_address()
-    
+
     write_to_log("------------------------    Checking Database Connection OK   -----------------------")
     print("\n------------------------    Checking Database Connection OK   -----------------------\n")
     db_conn = setup_db_connection("localhost", database_name, database_user_name, database_password)
@@ -489,7 +499,7 @@ def do_main():
     else:
         write_to_log("   OK - TEMP_APP_SETTINGS table exists")
     Global_dict = settings_db_to_dictionary(cursor)  
-     
+
     result = check_table_exists(cursor, "TEMP_READINGS")
     if result is None:
         write_to_log("*** NO TEMP_READINGS Table")
@@ -521,10 +531,15 @@ def do_main():
             write_to_log("***Waiting 5 seconds before trying again")
             time.sleep(5)
             
+    if send_start_up_status_email == True:
+        send_email(email_user[::-1], email_passwd[::-1], owner_email_addr[::-1], "PI Temperature Monitoring Power Up Status", 
+               "\nInitial startup and checking of DB OK\n\n" + str(len(all_sensors_list)) + 
+               " Temperature Sensors detected\n\nConnected to the WiFi network: " + ssid + "  OK\n\nWeb address http://" + ip_address + ":5000/home\n")
+    
     settle_time = int(Global_dict['first_read_settle_time'])
     write_to_log("Waiting %d seconds for the initial readings" % settle_time)
     time.sleep(settle_time)
-    
+
     while True:
         for sensor_name in all_sensors_list:
             db_sensor_id, offset = find_temp_sensor_id_and_offset(db_conn, cursor, sensor_name)      
