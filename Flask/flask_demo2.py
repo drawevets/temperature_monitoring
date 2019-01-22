@@ -1,12 +1,10 @@
 #! /usr/bin/python3.5
 
+import datetime
 import MySQLdb
-#from all_temps_to_DB import find_all_temp_sensors_connected
 import glob
-
 from flask import Flask
 from flask import render_template
-
 import subprocess
 
 app = Flask(__name__)
@@ -21,13 +19,19 @@ app = Flask(__name__)
 def home():
     ssid, quality, level = check_wireless_network_connection()
     all_sensors_list = find_all_temp_sensors_connected()
+    now = datetime.datetime.now()
+    date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
+    ip_address = get_local_ip_address()
+    
     html_return = "<html><h1>Temperature Monitoring System Status Page</h1></br>"
     html_return += "<h3>Wireless Network Connection SSID: " + ssid + "</h3>"
     html_return += "<h3>Wireless Network Signal Quality:  " + str(quality) + "%</h3>"
     html_return += "<h3>Wireless Network Signal Level:    " + str(level) + "dB</h3></br>"
-    html_return += "<h2>" + str(len(all_sensors_list)) + " sensors connected</h2>"
+    html_return += "<h2>There are " + str(len(all_sensors_list)) + " sensors connected: </h2>"
     for sensor in all_sensors_list:
-        html_return += "<h3>" + sensor + "</h3>"
+        html_return += "<h2>" + sensor + "</h2>"
+    html_return += "</br><h3>This is <a href=http://" + ip_address + ":5000/today_chart>today's chart</h3></a>"
+    html_return += "</br><body><i>(Status as of  " + date_and_time + ")</i><body>"
     html_return += "</html>"
     return(html_return)
 
@@ -97,12 +101,11 @@ def today_chart():
             temps_3.append(row[1])
     cursor.close()
     db_conn.close()
-
+    
     title = 'All Temperature Sensor Readings Today'
     return render_template('chart.html', values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
 
 
-@app.route('/')
 @app.route('/overview')
 def overview():
         #                              Location     DB Username   DB Passwd DB Name
@@ -351,6 +354,23 @@ def check_wireless_network_connection():
 
     #write_to_log("<< check_wireless_network_connection()")
     return ssid, quality, level
+
+
+def get_local_ip_address():
+    ip_address = "No network"
+    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
+        output = str(outbytes)
+        #print(output)
+        find_start_of_ip = output[output.find('inet ')+5:len(output)]
+        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
+        #write_to_log("   IP Address: " + ip_address)
+        #time.sleep(1)
+    except subprocess.CalledProcessError:
+        time.sleep(0.2)  #Do nothing!!
+    return ip_address
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
