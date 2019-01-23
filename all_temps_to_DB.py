@@ -21,7 +21,7 @@ database_name = "temps"
 database_user_name = "temps_user"
 database_password = "user"
 
-send_start_up_status_email = False
+send_start_up_status_email = "false"
 
 email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
 email_passwd = "!P4yrrebpsaR"
@@ -269,6 +269,7 @@ def create_settings_table_and_set_defaults(db_conn, db_cursor):
     sql = """INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) 
              VALUES ('sensor_polling_freq', '60', NOW()), 
                     ('write_to_logfile', 'true', NOW()),
+                    ('start_up_status_email', 'false', NOW()),
                     ('first_read_settle_time', '30', NOW())"""
     try:
         db_cursor.execute(sql)
@@ -465,7 +466,8 @@ def do_main():
     global Global_db_conn
     global Global_db_cursor
     global Global_dict
-
+    global send_start_up_status_email
+    
     all_sensors_list = None
     write_to_log("------------------------    Checking Network Connection OK   ------------------------")
     print("\n------------------------    Checking Network Connection OK   ------------------------\n")
@@ -530,8 +532,17 @@ def do_main():
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
             time.sleep(5)
-            
-    if send_start_up_status_email == True:
+
+    if 'start_up_status_email' in Global_dict:
+        send_start_up_status_email = Global_dict['start_up_status_email']
+        write_to_log("start_up_status_email from dictionary is: " + send_start_up_status_email)
+    else:
+        write_to_log("*****EMAIL:  start_up_status_email not in dictionary (and hence DB!)")
+
+    #Override for start emails!
+    send_start_up_status_email = "false"
+    
+    if send_start_up_status_email == "true":
         send_email(email_user[::-1], email_passwd[::-1], owner_email_addr[::-1], "PI Temperature Monitoring Power Up Status", 
                "\nInitial startup and checking of DB OK\n\n" + str(len(all_sensors_list)) + 
                " Temperature Sensors detected\n\nConnected to the WiFi network: " + ssid + "  OK\n\nWeb address http://" + ip_address + ":5000/home\n")
