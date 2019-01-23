@@ -13,8 +13,9 @@ sudo pip3 install sh
 sudo apt-get update
 sudo apt-get upgrade
 
-sudo apt-get install mysql
+sudo apt-get install mysql git
 
+git clone https://github.com/drawevets/temperature_monitoring
 
 ##########################################################################################################
 #Database Setup, User setup
