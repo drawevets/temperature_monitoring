@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Temps</title>
+        <meta charset="utf-8" />
+        <!-- import plugin script -->
+        <script src='static/Chart.min.js'></script>
+    </head>
+    <body>
+    <!-- chart canvas element -->
+    <canvas id="Temps_Chart" width="1920" height="1200"></canvas>
+
+    <script>
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+        Chart.defaults.global.responsive = true;
+        Chart.defaults.global.animation.duration = 3000;
+
+        // get chart canvas
+        var ctx = document.getElementById("Temps_Chart").getContext("2d");
+
+        // create the chart using the chart canvas
+        var myChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets : [{
+                label: 'Scatter Dataset',
+                data: {{ time_data }},
+                showLine: true
+                }]
+            }
+        });
+    </script>
+  </body>
+</html>
