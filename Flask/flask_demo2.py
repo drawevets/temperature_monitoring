@@ -36,6 +36,80 @@ def home():
     return(html_return)
 
 
+@app.route("/time_chart")
+def time_chart():
+    #                              Location     DB Username   DB Passwd DB Name
+    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = check_table_exists(cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
+               GROUP BY temp_sensor_db_id"""
+
+    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    #print(sensor_list)
+    
+    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
+    
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data = []
+    
+    count = 0
+    
+    for row in cursor.fetchall():
+        if row[2] == 1:
+            legend = str(row[3])
+            date.append(str(row[0]))
+            temps.append(row[1])
+            data.append("{x: " + str(count) + ", y: " + str(row[1]) +"}")
+            count = count + 1
+
+
+    print("data")
+    print(data)
+    
+    formatted_data = str(data).replace('\'', '')
+    
+    print("formatted_data")
+    print(formatted_data)
+
+    cursor.close()
+    db_conn.close()
+
+    title = 'All Temperature Sensor Readings Today'
+    return render_template('time_line_chart.html', time_data=formatted_data, values=temps, labels=date, legend=legend, title=title)
+
+
 @app.route("/today_chart")
 def today_chart():
     #                              Location     DB Username   DB Passwd DB Name
