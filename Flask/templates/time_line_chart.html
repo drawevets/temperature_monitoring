@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Temps</title>
-        <meta charset="utf-8" />
-        <!-- import plugin script -->
-        <script src='static/Chart.min.js'></script>
-    </head>
-    <body>
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Time Line Chart</h1></br>
+    <script src='static/Chart.min.js'></script>
     <!-- chart canvas element -->
-    <canvas id="Temps_Chart" width="1920" height="1200"></canvas>
+    <canvas id="Temps_Chart" width="1200" height="800"></canvas>
 
     <script>
         // Global parameters:
@@ -31,5 +26,4 @@
             }
         });
     </script>
-  </body>
-</html>
+{% endblock content %}
