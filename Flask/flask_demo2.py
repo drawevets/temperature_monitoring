@@ -33,8 +33,12 @@ def home():
     html_return += "</br><h3>This is <a href=http://" + ip_address + ":5000/today_chart>today's chart</h3></a>"
     html_return += "</br><body><i>(Status as of  " + date_and_time + ")</i><body>"
     html_return += "</html>"
-    return(html_return)
+    return render_template('home.html', title='Home', ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
+    #return(html_return)
 
+@app.route("/about")
+def about():
+    return render_template('about.html', title='About')
 
 @app.route("/time_chart")
 def time_chart():
@@ -94,9 +98,8 @@ def time_chart():
             data.append("{x: " + str(count) + ", y: " + str(row[1]) +"}")
             count = count + 1
 
-
-    print("data")
-    print(data)
+    #print("data")
+    #print(data)
     
     formatted_data = str(data).replace('\'', '')
     
@@ -106,7 +109,7 @@ def time_chart():
     cursor.close()
     db_conn.close()
 
-    title = 'All Temperature Sensor Readings Today'
+    title = 'Today Only'
     return render_template('time_line_chart.html', time_data=formatted_data, values=temps, labels=date, legend=legend, title=title)
 
 
@@ -176,7 +179,7 @@ def today_chart():
     cursor.close()
     db_conn.close()
     
-    title = 'All Temperature Sensor Readings Today'
+    title = 'Old Today Only'
     return render_template('chart.html', values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
 
 
