@@ -36,9 +36,11 @@ def home():
     return render_template('home.html', title='Home', ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
     #return(html_return)
 
+
 @app.route("/about")
 def about():
     return render_template('about.html', title='About')
+
 
 @app.route("/time_chart")
 def time_chart():
@@ -71,7 +73,7 @@ def time_chart():
         return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
     #print(sensor_list)
     
-    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',MONTH(TEMP_READINGS.date_added),',',DAY(TEMP_READINGS.date_added),',',HOUR(TEMP_READINGS.date_added),',',MINUTE(TEMP_READINGS.date_added)) as time_added, 
                       temperature, 
                       temp_sensor_db_id, 
                       temp_sensor_alias 
@@ -87,25 +89,20 @@ def time_chart():
     date = []
     temps = []
     data = []
-    
-    count = 0
-    
+
     for row in cursor.fetchall():
         if row[2] == 1:
             legend = str(row[3])
             date.append(str(row[0]))
             temps.append(row[1])
-            data.append("{x: " + str(count) + ", y: " + str(row[1]) +"}")
-            count = count + 1
-
-    #print("data")
-    #print(data)
+            data.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
     formatted_data = str(data).replace('\'', '')
-    
-    print("formatted_data")
-    print(formatted_data)
 
+    #print("\nFormatted Date and time data:")
+    #print(formatted_data)
+    #print("\n")
+    
     cursor.close()
     db_conn.close()
 
@@ -216,6 +213,7 @@ def overview():
  
         return output
 
+
 @app.route('/all')
 def all():
         #                              Location     DB Username   DB Passwd DB Name
@@ -249,6 +247,7 @@ def all():
         db_conn.close()
 
         return output
+
 
 @app.route('/last')
 def last():
