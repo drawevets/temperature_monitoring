@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
-    <h1>Time Line Chart</h1></br>
+    <h2>{{ title }}</h2></br>
     <script src='static/Chart.min.js'></script>
     <!-- chart canvas element -->
-    <canvas id="Temps_Chart" width="1200" height="800"></canvas>
+    <canvas id="Temps_Chart" width="1200" height="1000"></canvas>
 
     <script>
         // Global parameters:
@@ -19,35 +19,101 @@
             type: 'scatter',
             data: {
                 datasets : [{
-                    label: 'Line or Scatter Dataset',
-                    data: {{ time_data }},
+                    label: '{{ series1 }}',
+                    data: {{ temps1 }},
                     fill: false,
                     showLine: true,
-                    lineTension: 0.3,
+                    lineTension: 0.5,
                     backgroundColor: "rgba(75,192,192,0.4)",
                     borderColor: "rgba(75,192,192,1)",
                     borderCapStyle: 'butt',
                     pointBorderColor: "rgba(75,192,192,1)",
                     pointBackgroundColor: "#fff",
-                    pointBorderWidth: 7,
+                    pointBorderWidth: 2,
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: "rgba(75,192,192,1)",
                     pointHoverBorderColor: "rgba(220,220,220,1)",
                     pointHoverBorderWidth: 2,
-                    pointRadius: 1,         //Hide point on line
+                    pointRadius: 0,         //Hide point on line
+                    pointHitRadius: 10
+                },
+                {
+                    label: '{{ series2 }}',
+                    data: {{ temps2 }},
+                    fill: false,
+                    showLine: true,
+                    lineTension: 0.5,
+                    backgroundColor: "rgba(225,50,50,0.4)",
+                    borderColor: "rgba(200,50,50,1)",
+                    borderCapStyle: 'butt',
+                    pointBorderColor: "rgba(200,50,50,1)",
+                    pointBackgroundColor: "#fff",
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: "rgba(200,50,50,1)",
+                    pointHoverBorderColor: "rgba(220,220,220,1)",
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 0,         //Hide point on line
+                    pointHitRadius: 10
+                },
+                {
+                    label: '{{ series3 }}',
+                    data: {{ temps3 }},
+                    fill: false,
+                    showLine: true,
+                    lineTension: 0.5,
+                    backgroundColor: "rgba(50,50,200,0.4)",
+                    borderColor: "rgba(50,50,225,1)",
+                    borderCapStyle: 'butt',
+                    pointBorderColor: "rgba(50,50,225,1)",
+                    pointBackgroundColor: "#fff",
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: "rgba(50,50,200,1)",
+                    pointHoverBorderColor: "rgba(220,220,200,1)",
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 0,         //Hide point on line
                     pointHitRadius: 10
                 }]
             },
             options: {
+                title: {
+                    display: true,
+                    position: 'top',
+                    fontSize: 36,
+                    fontStyle: 'normal',
+                    fontColor: '#020370',
+                    padding: 10,
+                    text: '{{chart_title}}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    padding: 15,
+                    labels: {
+                        fontSize: 14,
+                        fontColor: 'rgb(30, 30, 30)',
+                        padding: 20,
+                        boxWidth: 20
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        bottom: 10
+                    }
+                },
                 scales: {
                     yAxes: [{
                         ticks: {
                             beginAtZero: false,
-                            suggestedMin: 15,
-                            suggestedMax: 20,
+                            suggestedMin: 5,
+                            suggestedMax: 10,
                             stepSize: 1,
-                            fontSize: 14,
-                            fontStyle: 'bold'
+                            fontSize: 13,
+                            fontStyle: 'normal'
                         },
                         scaleLabel: {
                             display: true,
@@ -65,13 +131,20 @@
                         //type: 'time',
                         distribution: 'linear',
                         ticks: {
-                        // Convert UNIX time back to something meaningful
-                        callback: function(value, index, values) {
-                            full = new Date(value);
-                            hours = full.getHours();
-                            minutes = full.getMinutes();
-                            return (hours + ':' + minutes);
-                        }},
+                            // Convert UNIX time back to something meaningful
+                            callback: function(value, index, values) {
+                                    full = new Date(value);
+                                    hours = full.getHours();
+                                    hours = ("0"+hours).slice(-2); // Pad with leading zero
+                                    minutes = full.getMinutes();
+                                    minutes = ("0"+minutes).slice(-2); // Pad with leading zero
+                                    return (hours + ':' + minutes);
+                                },
+                                beginAtZero: false,
+                                //stepSize: 10000,
+                                fontSize: 12,
+                                fontStyle: 'normal'
+                        },
                         scaleLabel: {
                             display: true,
                             fontSize: 13,

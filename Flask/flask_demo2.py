@@ -23,23 +23,12 @@ def home():
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = get_local_ip_address()
     
-    html_return = "<html><h1>Temperature Monitoring System Status Page</h1></br>"
-    html_return += "<h3>Wireless Network Connection SSID: " + ssid + "</h3>"
-    html_return += "<h3>Wireless Network Signal Quality:  " + str(quality) + "%</h3>"
-    html_return += "<h3>Wireless Network Signal Level:    " + str(level) + "dB</h3></br>"
-    html_return += "<h2>There are " + str(len(all_sensors_list)) + " sensors connected: </h2>"
-    for sensor in all_sensors_list:
-        html_return += "<h2>" + sensor + "</h2>"
-    html_return += "</br><h3>This is <a href=http://" + ip_address + ":5000/today_chart>today's chart</h3></a>"
-    html_return += "</br><body><i>(Status as of  " + date_and_time + ")</i><body>"
-    html_return += "</html>"
-    return render_template('home.html', title='Home', ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
-    #return(html_return)
+    return render_template('home.html', page_heading='System Status', title='Home', ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
 
 
 @app.route("/about")
 def about():
-    return render_template('about.html', title='About')
+    return render_template('about.html', page_heading='About', title='About')
 
 
 @app.route("/time_chart")
@@ -88,16 +77,22 @@ def time_chart():
 
     date = []
     temps = []
-    data = []
+    data1 = []
+    data2 = []
+    data3 = []
 
-    for row in cursor.fetchall():
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
         if row[2] == 1:
-            legend = str(row[3])
-            date.append(str(row[0]))
-            temps.append(row[1])
-            data.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == 2:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == 5:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
-    formatted_data = str(data).replace('\'', '')
+    formatted_data = str(data1).replace('\'', '')
 
     #print("\nFormatted Date and time data:")
     #print(formatted_data)
@@ -106,8 +101,18 @@ def time_chart():
     cursor.close()
     db_conn.close()
 
-    title = 'Today Only'
-    return render_template('time_line_chart.html', time_data=formatted_data, values=temps, labels=date, legend=legend, title=title)
+    page_title = 'Page Title'
+    chart_title = 'Temperature Readings for Today Only'
+    return render_template('time_line_chart.html',
+                           page_heading = '',
+                           title=page_title,
+                           temps1=str(data1).replace('\'', ''), 
+                           temps2=str(data2).replace('\'', ''), 
+                           temps3=str(data3).replace('\'', ''), 
+                           series1=legend1, 
+                           series2=legend2, 
+                           series3=legend3,
+                           chart_title=chart_title)
 
 
 @app.route("/today_chart")
