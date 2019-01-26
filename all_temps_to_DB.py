@@ -6,11 +6,11 @@ import glob
 from pathlib import Path
 import time
 import MySQLdb
-import sys
+import RPi.GPIO as GPIO
 import signal
 import smtplib
-import sqlite3
 import subprocess
+import sys
 import time
 
 #Setup for 1 Wire Temp Probe etc...
@@ -34,6 +34,25 @@ Global_dict = None
 Global_logfile = None
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
+
+
+def setup_gpio():
+    GPIO.setmode(GPIO.BCM)   #Use GPIO no, NOT pin no
+    GPIO.setup(18, GPIO.OUT)
+    GPIO.setup(23, GPIO.OUT)
+    GPIO.setup(24, GPIO.OUT)
+    GPIO.output(18, False)
+    GPIO.output(23, False)
+    GPIO.output(24, False)
+
+def network_status(status):
+    GPIO.output(18, status)
+
+def expected_sensor_count(status):
+    GPIO.output(23, status)
+
+def safe_to_unplug(status):
+    GPIO.output(24, status)
 
 def write_to_log(text_to_write):
     global Global_dict
@@ -86,6 +105,9 @@ def clean_shutdown():
         Global_db_cursor.close()
     if Global_db_conn is not None:
         Global_db_conn.close()
+    network_status(False)
+    expected_sensor_count(False)
+    safe_to_unplug(True)
     write_to_log("Finished....")
     sys.exit(0)
 
@@ -144,15 +166,20 @@ def read_temp_raw(sensor_id):
 
 
 def read_temp(sensor_id):
-    write_to_log(">> read_temp()")
+    write_to_log(">> read_temp(" + sensor_id + ")")
     lines = read_temp_raw(sensor_id)
     if lines is None:
         write_to_log("   lines is None!!!")
         return None
-    while lines[0].strip()[-3:] != 'YES':                   # ignore first line
+
+    retry_counter = 1
+    max_retries = 3
+    
+    while lines[0].strip()[-3:] != 'YES' and retry_counter < max_retries: # ignore first line
         time.sleep(0.2)
         lines = read_temp_raw(sensor_id)
-
+        retry_counter += 1
+        
     if lines[0].strip()[-3:] == 'YES':
         equals_pos = lines[1].find('t=')                    # find temperature in the details
     else:
@@ -267,7 +294,7 @@ def create_settings_table_and_set_defaults(db_conn, db_cursor):
         return None
 
     sql = """INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) 
-             VALUES ('sensor_polling_freq', '60', NOW()), 
+             VALUES ('sensor_polling_freq', '300', NOW()), 
                     ('write_to_logfile', 'true', NOW()),
                     ('start_up_status_email', 'false', NOW()),
                     ('first_read_settle_time', '30', NOW())"""
@@ -379,21 +406,24 @@ def check_wireless_network_connection():
     quality = 0
     level = 0
     result = None
-    #ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
+        outbytes = subprocess.check_output(('grep', 'off/any'), stdin=ps.stdout) #this will fail if connected!!
+        
+    except subprocess.CalledProcessError:
+        # this means there was a network found as 'off/any' only occurs when not connected
+        ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         outbytes = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
         output = str(outbytes)
         find_start_of_ssid = output[output.find('ESSID:')+7:len(output)]
         ssid = find_start_of_ssid[0:find_start_of_ssid.find('"')]
+        result = True
         write_to_log("   WiFi SSID: " + ssid)
         result = 0
-    except subprocess.CalledProcessError:
-        # grep did not match any lines
-        write_to_log("ERROR    No wireless networks connected!!")
     
     if result is not None:    
-        ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
+        ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         outbytes = subprocess.check_output(('grep', 'Quality'), stdin=ps.stdout)
         output = str(outbytes)
         pos = output.find('Quality=')
@@ -407,7 +437,9 @@ def check_wireless_network_connection():
         level_str = level_str[0:3]
         level = int(level_str)
         write_to_log("   WiFi Signal Level: " + str(level) + "dBm")
-    
+    else:
+        write_to_log("***** No wireless network connection")
+        
     write_to_log("<< check_wireless_network_connection()")
     return ssid, quality, level
 
@@ -467,16 +499,19 @@ def do_main():
     global Global_db_cursor
     global Global_dict
     global send_start_up_status_email
-    
+    safe_to_unplug(True)
     all_sensors_list = None
     write_to_log("------------------------    Checking Network Connection OK   ------------------------")
     print("\n------------------------    Checking Network Connection OK   ------------------------\n")
+
     ssid, quality, level = check_wireless_network_connection()
     if ssid == '':
         sys.exit(0)
 
     ip_address = get_local_ip_address()
-
+    
+    network_status(True)
+    
     write_to_log("------------------------    Checking Database Connection OK   -----------------------")
     print("\n------------------------    Checking Database Connection OK   -----------------------\n")
     db_conn = setup_db_connection("localhost", database_name, database_user_name, database_password)
@@ -492,7 +527,7 @@ def do_main():
 
     #Setup a Query
     #query = "SELECT * FROM test.temps WHERE date_of_reading < STR_TO_DATE('24/12/2018 17:00', '%d/%m/%Y %H:%i') "
-
+    safe_to_unplug(False)
     result = check_table_exists(cursor, "TEMP_APP_SETTINGS")
     if result is None:
         write_to_log("*** NO TEMP_APP_SETTINGS Table")
@@ -520,7 +555,7 @@ def do_main():
 
     write_to_log("-------------------    Finished DB connection and setup all OK   -------------------")
     print("\n-------------------    Finished DB connection and setup all OK   -------------------\n")
-    
+    safe_to_unplug(True)
     result = reset_sensor_connected_status(db_conn, cursor)
     if result is None:
         write_to_log("ERROR - sensor connection status reset failed!")
@@ -532,6 +567,12 @@ def do_main():
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
             time.sleep(5)
+            
+    no_of_sensors = len(all_sensors_list)
+    if no_of_sensors == 3:
+        expected_sensor_count(True)
+    else:
+        expected_sensor_count(False)
 
     if 'start_up_status_email' in Global_dict:
         send_start_up_status_email = Global_dict['start_up_status_email']
@@ -552,10 +593,23 @@ def do_main():
     time.sleep(settle_time)
 
     while True:
+        ssid, quality, level = check_wireless_network_connection()
+        if ssid != '':
+            network_status(True)
+        else:
+            network_status(False)
+            
+        all_sensors_list = find_all_temp_sensors_connected()
+        no_of_sensors = len(all_sensors_list)
+        if no_of_sensors == 3:
+            expected_sensor_count(True)
+        else:
+            expected_sensor_count(False)
+                   
         for sensor_name in all_sensors_list:
             db_sensor_id, offset = find_temp_sensor_id_and_offset(db_conn, cursor, sensor_name)      
             write_to_log("   DB Sensor ID: " + str(db_sensor_id) + "   Temp Offset: " + str(offset))
-
+            safe_to_unplug(False)
             if db_sensor_id is not None:
                 temperature = read_temp(sensor_name)
                 if temperature is not None:
@@ -567,6 +621,7 @@ def do_main():
         loop_time = int(Global_dict['sensor_polling_freq'])
         write_to_log("The next reading will be taken in " + str(int(round(loop_time / 60, 0))) + " minutes")
         print("\n-----------   Temperature Sensor Readings Taken Now Waiting for loop time   --------\n")
+        safe_to_unplug(True)
         time.sleep(loop_time)
         os.system('clear')
     else:
@@ -578,7 +633,7 @@ def do_main():
 #Setup Handler for catching ctrl+c and kill signal, then shutdown cleanly
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-
+setup_gpio()
 os.system('clear')
 clean_old_log_file()
 write_to_log("\n\n************  Started  -  all_temps_to_DB.py  ************\n")
