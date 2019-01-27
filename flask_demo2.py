@@ -6,9 +6,11 @@ import MySQLdb
 import glob
 from flask import Flask
 from flask import render_template
+import socket
 import subprocess
 
 lg = "web"
+base_dir = '/sys/bus/w1/devices/'
 
 app = Flask(__name__)
 
@@ -20,6 +22,30 @@ app = Flask(__name__)
 @app.route("/")
 @app.route("/home")
 def home():
+    vstring = cfuncs.app_version()
+    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+#                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    temp_readings = []  
+    for sensor_name in all_sensors_list:
+        db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, False)      
+        if db_sensor_id is not None:
+            temperature = cfuncs.read_temp(lg, sensor_name) + offset
+            temp_readings.append(sensor_name)
+            temp_readings.append(temperature)
+            
+    print(temp_readings)
+        
+    return render_template('home.html', version=vstring, page_heading='Home', title='Home')   
+
+
+@app.route("/status")
+def status():
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
     now = datetime.datetime.now()
@@ -27,12 +53,13 @@ def home():
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
     
-    return render_template('home.html', version=vstring, page_heading='System Status', title='Home', ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
+    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
 
 
 @app.route("/about")
 def about():
-    return render_template('about.html', page_heading='About', title='About')
+    vstring = cfuncs.app_version()
+    return render_template('about.html', version=vstring, page_heading='About', title='About')
 
 
 @app.route("/time_chart")
@@ -97,7 +124,7 @@ def time_chart():
             legend3 = str(row[3])
             data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
-    formatted_data = str(data1).replace('\'', '')
+    #formatted_data = str(data1).replace('\'', '')
 
     #print("\nFormatted Date and time data:")
     #print(formatted_data)
@@ -105,10 +132,12 @@ def time_chart():
     
     cursor.close()
     db_conn.close()
-
-    page_title = 'Page Title'
+    vstring = cfuncs.app_version()
+    
+    page_title = 'Todays Temps'
     chart_title = 'Temperature Readings for Today Only'
     return render_template('time_line_chart.html',
+                           version=vstring,
                            page_heading = '',
                            title=page_title,
                            temps1=str(data1).replace('\'', ''), 
@@ -185,9 +214,10 @@ def today_chart():
             temps_3.append(row[1])
     cursor.close()
     db_conn.close()
+    vstring = cfuncs.app_version()
     
     title = 'Old Today Only'
-    return render_template('chart.html', values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
+    return render_template('chart.html', version=vstring, values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
 
 
 @app.route('/overview')
@@ -365,3 +395,7 @@ def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
 
     return no_of_sensors, sensor_ids
 
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
+    

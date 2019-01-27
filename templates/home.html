@@ -1,48 +1,4 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md5">
-            <h3>Wireless Network Status:</h3>
-            <table class="table table-bordered table-sm">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Network Connection SSID</td>
-                        <td>{{ ssid }}</td>
-                    </tr>
-                    <tr>
-                        <td>Network Signal Quality</td>
-                        <td>{{ quality }} %</td>
-                    </tr>
-                    <tr>
-                        <td>Network Signal Level</td>
-                        <td>{{ level }} dB</td>
-                    </tr>
-                </tbody>
-            </table>
-            </br>
-            <h3>Temperature sensors connected:</h3>
-            <table class="table table-bordered table-sm">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Sensor ID</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sensor in sensors_list %}
-                        <tr>
-                            <td>{{ sensor }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+
 {% endblock content %}

@@ -10,74 +10,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.10 27/01/19")
-
-
-def setup_db_connection(caller, host, db, user, passwd):
-    write_to_log(caller, "cf: >> setup_db_connection()")
-    
-    try:
-        db = MySQLdb.connect(host, user, passwd, db)
-    except:
-        write_to_log(caller, "***Database connection failed!")
-        db = None
-    write_to_log(caller, "cf: << setup_db_connection()")
-    return db
-
-
-def write_to_log(caller, text_to_write):
-    #global Global_dict
-    logging = "true"
-
-    if caller == "web":
-        log_file = "weblog.txt"
-    elif caller == "temps":
-        log_file = "log.txt"
-    else:
-        log_file = "log.txt"
-
-    #if Global_dict is not None:
-    #    if Global_dict['write_to_logfile'] == "true":
-    #        logging = "true"
-    #else:
-    #    logging = "true"
-
-    if logging == "true":
-        try:
-            logfile =  open(log_file, 'a+')
-            now = datetime.datetime.now()
-            log_date = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
-            log_string = log_date + " " + text_to_write
-            
-            logfile.write(log_string + "\n")
-            if log_to_console == True:
-                print(log_string)
-                
-            logfile.close()
-        except:
-            print("Failed to open " + log_file + " for writing")
-
-
-def get_local_ip_address(caller):
-    write_to_log(caller, "cf: >> get_local_ip_address()")
-
-    ip_address = None
-    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
-        output = str(outbytes)
-        #print(output)
-        find_start_of_ip = output[output.find('inet ')+5:len(output)]
-        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
-        write_to_log(caller, "cf:   IP Address: " + ip_address)
-        #time.sleep(1)
-    except subprocess.CalledProcessError:
-        # grep did not match any lines
-        write_to_log(caller, "cf: ERROR    No wireless networks connected!!")
-        #time.sleep(5)
-    
-    write_to_log(caller, "cf: << get_local_ip_address()")
-    return ip_address
+    return ("v0.10  Last updated: 27/01/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -150,4 +83,164 @@ def find_all_temp_sensors_connected(caller):
         all_sensors_list = None      
     write_to_log(caller, "cf: << find_all_temp_sensors_connected()")
     return all_sensors_list
+
+
+def find_temp_sensor_pos(caller, sensor_id):
+    devices = glob.glob(base_dir + '28*')
+    #print("Looking for sensor: " + str(sensor_id) + ", in folder " + base_dir)
+    count = 0
+    for count, sensor in enumerate(devices):
+        pos = sensor.find(sensor_id)
+        if pos is not -1:
+            #print("Found sensor in " + sensor + ", this is sensor " + str(count))
+            return count
+            
+    return None
+
+
+def find_temp_sensor_id_and_offset(caller, db_conn, db_cursor, sensor_id, update_conn_status):
+    write_to_log(caller, "cf: >> find_temp_sensor_id_and_offset()")
+    query = "SELECT * FROM temps.TEMP_SENSORS WHERE temp_sensor_id = '" + sensor_id + "'"
+    db_cursor.execute(query)
+    id = None
+    temp_offset = 0
+    write_to_log(caller, "cf:   Looking for sensor id: " + sensor_id)
+    for row in db_cursor.fetchall():
+        id = str(row[0])
+        date = str(row[1])
+        temp_sensor_id = str(row[2])
+        temp_sensor_alias = row[3]
+        temp_offset = row[4]
+        write_to_log(caller, "cf:   Sensor info from DB: " + id + " " + date + " " + temp_sensor_id + " " + str(temp_offset))
+        if update_conn_status is True:
+            try:
+                update_sql = "UPDATE temps.TEMP_SENSORS SET connected = 1 WHERE temp_sensor_id='" + temp_sensor_id + "'"
+                db_cursor.execute(update_sql)
+                db_conn.commit()
+                write_to_log(caller, "cf:   updated sensor connected status for " + temp_sensor_id)
+            except:
+                db_conn.rollback()
+                write_to_log(caller, "cf:   sensor connected status update failed for " + temp_sensor_id + "!!")
+                # do something else here!?!?!?!
+        
+    if id is None:
+        write_to_log(caller, "cf:***Sensor info not found in DB***")
+    write_to_log(caller, "cf: << find_temp_sensor_id_and_offset()")
+    return id, temp_offset
+
+
+def get_local_ip_address(caller):
+    write_to_log(caller, "cf: >> get_local_ip_address()")
+
+    ip_address = None
+    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
+        output = str(outbytes)
+        #print(output)
+        find_start_of_ip = output[output.find('inet ')+5:len(output)]
+        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
+        write_to_log(caller, "cf:   IP Address: " + ip_address)
+        #time.sleep(1)
+    except subprocess.CalledProcessError:
+        # grep did not match any lines
+        write_to_log(caller, "cf: ERROR    No wireless networks connected!!")
+        #time.sleep(5)
+    
+    write_to_log(caller, "cf: << get_local_ip_address()")
+    return ip_address
+
+
+def read_temp(caller, sensor_id):
+    write_to_log(caller, "cf: >> read_temp(" + sensor_id + ")")
+    lines = read_temp_raw(caller, sensor_id)
+    if lines is None:
+        write_to_log(caller, "cf:   lines is None!!!")
+        return None
+
+    retry_counter = 1
+    max_retries = 3
+    
+    while lines[0].strip()[-3:] != 'YES' and retry_counter < max_retries: # ignore first line
+        time.sleep(0.2)
+        lines = read_temp_raw(caller, sensor_id)
+        retry_counter += 1
+        
+    if lines[0].strip()[-3:] == 'YES':
+        equals_pos = lines[1].find('t=')                    # find temperature in the details
+    else:
+        write_to_log(caller, "cf:    Sensor not returning valid temperature / it may have been unplugged!")
+        return None
+
+    if equals_pos != -1:
+        temp_string = lines[1][equals_pos+2:]
+        temp_c = round(float(temp_string) / 1000.0, 1)      # convert to Celsius and round to 1 decimal place
+        write_to_log(caller, "cf:    returning non-corrected temperature of " + str(temp_c))
+        write_to_log(caller, "cf: << read_temp()")
+        return temp_c
+    write_to_log(caller, "cf: << read_temp()")
+
+
+def read_temp_raw(caller, sensor_id):
+    write_to_log(caller, "cf: >> read_temp_raw()")
+    if sensor_id is not None:
+        pos = find_temp_sensor_pos(caller, sensor_id)
+        if pos is not None:
+            #print("Sensor position in list is " + str(pos))
+            device_folder = glob.glob(base_dir + '28*')[pos]
+        else:
+            return None
+    else:
+        device_folder = glob.glob(base_dir + '28*')[0]      # find device with address starting from 28*
+    device_file = device_folder + '/w1_slave'
+    f = open(device_file, 'r')
+    lines = f.readlines()                                   # read the device details
+    f.close()
+    write_to_log(caller, "cf: << read_temp_raw()")
+    return lines
+
+
+def setup_db_connection(caller, host, db, user, passwd):
+    write_to_log(caller, "cf: >> setup_db_connection()")
+    
+    try:
+        db = MySQLdb.connect(host, user, passwd, db)
+    except:
+        write_to_log(caller, "***Database connection failed!")
+        db = None
+    write_to_log(caller, "cf: << setup_db_connection()")
+    return db
+
+
+def write_to_log(caller, text_to_write):
+    #global Global_dict
+    logging = "true"
+
+    if caller == "web":
+        log_file = "weblog.txt"
+    elif caller == "temps":
+        log_file = "log.txt"
+    else:
+        log_file = "log.txt"
+
+    #if Global_dict is not None:
+    #    if Global_dict['write_to_logfile'] == "true":
+    #        logging = "true"
+    #else:
+    #    logging = "true"
+
+    if logging == "true":
+        try:
+            logfile =  open(log_file, 'a+')
+            now = datetime.datetime.now()
+            log_date = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
+            log_string = log_date + " " + text_to_write
+            
+            logfile.write(log_string + "\n")
+            if log_to_console == True:
+                print(log_string)
+                
+            logfile.close()
+        except:
+            print("Failed to open " + log_file + " for writing")
 

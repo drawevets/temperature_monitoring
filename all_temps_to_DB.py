@@ -123,68 +123,6 @@ def clean_shutdown():
     sys.exit(0)
 
 
-def find_temp_sensor_pos(sensor_id):
-    devices = glob.glob(base_dir + '28*')
-    #print("Looking for sensor: " + str(sensor_id) + ", in folder " + base_dir)
-    count = 0
-    for count, sensor in enumerate(devices):
-        pos = sensor.find(sensor_id)
-        if pos is not -1:
-            #print("Found sensor in " + sensor + ", this is sensor " + str(count))
-            return count
-            
-    return None
-
-
-def read_temp_raw(sensor_id):
-    write_to_log(">> read_temp_raw()")
-    if sensor_id is not None:
-        pos = find_temp_sensor_pos(sensor_id)
-        if pos is not None:
-            #print("Sensor position in list is " + str(pos))
-            device_folder = glob.glob(base_dir + '28*')[pos]
-        else:
-            return None
-    else:
-        device_folder = glob.glob(base_dir + '28*')[0]      # find device with address starting from 28*
-    device_file = device_folder + '/w1_slave'
-    f = open(device_file, 'r')
-    lines = f.readlines()                                   # read the device details
-    f.close()
-    write_to_log("<< read_temp_raw()")
-    return lines
-
-
-def read_temp(sensor_id):
-    write_to_log(">> read_temp(" + sensor_id + ")")
-    lines = read_temp_raw(sensor_id)
-    if lines is None:
-        write_to_log("   lines is None!!!")
-        return None
-
-    retry_counter = 1
-    max_retries = 3
-    
-    while lines[0].strip()[-3:] != 'YES' and retry_counter < max_retries: # ignore first line
-        time.sleep(0.2)
-        lines = read_temp_raw(sensor_id)
-        retry_counter += 1
-        
-    if lines[0].strip()[-3:] == 'YES':
-        equals_pos = lines[1].find('t=')                    # find temperature in the details
-    else:
-        write_to_log("   Sensor not returning valid temperature / it may have been unplugged!")
-        return None
-
-    if equals_pos != -1:
-        temp_string = lines[1][equals_pos+2:]
-        temp_c = round(float(temp_string) / 1000.0, 1)      # convert to Celsius and round to 1 decimal place
-        write_to_log("   returning non-corrected temperature of " + str(temp_c))
-        write_to_log("<< read_temp()")
-        return temp_c
-    write_to_log("<< read_temp()")
-
-
 def create_temp_readings_table(db_cursor):
     write_to_log("   Creating table for temperature readings")
     sql = """CREATE TABLE TEMP_READINGS (
@@ -374,36 +312,6 @@ def reset_sensor_connected_status(db_conn, db_cursor):
     return id, temp_offset
 
 
-def find_temp_sensor_id_and_offset(db_conn, db_cursor, sensor_id):
-    write_to_log(">> find_temp_sensor_id_and_offset()")
-    query = "SELECT * FROM temps.TEMP_SENSORS WHERE temp_sensor_id = '" + sensor_id + "'"
-    db_cursor.execute(query)
-    id = None
-    temp_offset = 0
-    write_to_log("   Looking for sensor id: " + sensor_id)
-    for row in db_cursor.fetchall():
-        id = str(row[0])
-        date = str(row[1])
-        temp_sensor_id = str(row[2])
-        temp_sensor_alias = row[3]
-        temp_offset = row[4]
-        write_to_log("   Sensor info from DB: " + id + " " + date + " " + temp_sensor_id + " " + str(temp_offset))
-        try:
-            update_sql = "UPDATE temps.TEMP_SENSORS SET connected = 1 WHERE temp_sensor_id='" + temp_sensor_id + "'"
-            db_cursor.execute(update_sql)
-            db_conn.commit()
-            write_to_log("   updated sensor connected status for " + temp_sensor_id)
-        except:
-            db_conn.rollback()
-            write_to_log("   sensor connected status update failed for " + temp_sensor_id + "!!")
-            # do something else here!?!?!?!
-        
-    if id is None:
-        write_to_log("***Sensor info not found in DB***")
-    write_to_log("<< find_temp_sensor_id_and_offset()")
-    return id, temp_offset
-
-
 def dump_all_db_data_out(db_cursor):
     query = "SELECT * FROM temps.TEMP_READINGS"
     db_cursor.execute(query)
@@ -549,11 +457,11 @@ def do_main():
             expected_sensor_count(False)
                    
         for sensor_name in all_sensors_list:
-            db_sensor_id, offset = find_temp_sensor_id_and_offset(db_conn, cursor, sensor_name)      
+            db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, True)      
             write_to_log("   DB Sensor ID: " + str(db_sensor_id) + "   Temp Offset: " + str(offset))
             safe_to_unplug(False)
             if db_sensor_id is not None:
-                temperature = read_temp(sensor_name)
+                temperature = cfuncs.read_temp(lg, sensor_name)
                 if temperature is not None:
                     write_temp_reading_to_db(db_conn, cursor, db_sensor_id, (temperature + offset))
                 else:
