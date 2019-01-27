@@ -22,7 +22,6 @@ database_name = "temps"
 database_user_name = "temps_user"
 database_password = "user"
 
-send_start_up_status_email = "false"
 log_to_console = True
 
 email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
@@ -45,14 +44,18 @@ def setup_gpio():
     GPIO.output(23, False)
     GPIO.output(24, False)
 
+
 def network_status(status):
     GPIO.output(18, status)
+
 
 def expected_sensor_count(status):
     GPIO.output(23, status)
 
+
 def safe_to_unplug(status):
     GPIO.output(24, status)
+
 
 def write_to_log(text_to_write):
     global Global_dict
@@ -145,8 +148,6 @@ def find_temp_sensor_pos(sensor_id):
         if pos is not -1:
             #print("Found sensor in " + sensor + ", this is sensor " + str(count))
             return count
-        #else:
-            #print("Not found in " + sensor + ", this is sensor " + str(count))
             
     return None
 
@@ -527,8 +528,8 @@ def send_email(user, pwd, recipient, subject, body):
     TEXT = body
 
     # Prepare actual message
-    message = """From: %s\nTo: %s\nSubject: %s\n\n%s
-    """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+    message = "From: %s\nTo: %s\nSubject: %s\n\n%s" % (FROM, ", ".join(TO), SUBJECT, TEXT)
+    
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         status = server.ehlo()
@@ -613,17 +614,17 @@ def do_main():
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
             time.sleep(5)
-            
+
     no_of_sensors = len(all_sensors_list)
     if no_of_sensors == 3:
         expected_sensor_count(True)
     else:
         expected_sensor_count(False)
 
-    #Override for start emails!
-    send_start_up_status_email = "true"
-    
     send_start_up_status_email = Global_dict['start_up_status_email']
+    #Override for start emails!
+    send_start_up_status_email = "false"
+
     if send_start_up_status_email == "true":
         send_email(email_user[::-1], email_passwd[::-1], Global_dict['email_recipient_addr'][::-1], 
                "PI Temperature Monitoring Power Up Status", 
