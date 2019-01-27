@@ -1,11 +1,14 @@
 #! /usr/bin/python3.5
 
+import common_functions as cfuncs
 import datetime
 import MySQLdb
 import glob
 from flask import Flask
 from flask import render_template
 import subprocess
+
+lg = "web"
 
 app = Flask(__name__)
 
@@ -17,13 +20,14 @@ app = Flask(__name__)
 @app.route("/")
 @app.route("/home")
 def home():
-    ssid, quality, level = check_wireless_network_connection()
-    all_sensors_list = find_all_temp_sensors_connected()
+    ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
+    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
     now = datetime.datetime.now()
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
-    ip_address = get_local_ip_address()
+    ip_address = cfuncs.get_local_ip_address("web")
+    vstring = cfuncs.app_version()
     
-    return render_template('home.html', page_heading='System Status', title='Home', ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
+    return render_template('home.html', version=vstring, page_heading='System Status', title='Home', ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
 
 
 @app.route("/about")
@@ -33,14 +37,15 @@ def about():
 
 @app.route("/time_chart")
 def time_chart():
-    #                              Location     DB Username   DB Passwd DB Name
-    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
         return("<html><h1>DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = check_table_exists(cursor, db_temp_readings_table)
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -118,7 +123,7 @@ def time_chart():
 @app.route("/today_chart")
 def today_chart():
     #                              Location     DB Username   DB Passwd DB Name
-    db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+    db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
         return("<html><h1>DB connection failed!</h1></html>")
@@ -188,7 +193,7 @@ def today_chart():
 @app.route('/overview')
 def overview():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -222,7 +227,7 @@ def overview():
 @app.route('/all')
 def all():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -257,7 +262,7 @@ def all():
 @app.route('/last')
 def last():
         #                              Location     DB Username   DB Passwd DB Name
-        db_conn = setup_db_connection("localhost", "temps_reader", "reader", "temps")
+        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
         db_temp_readings_table = "TEMP_READINGS"
         if db_conn is None:
             print("DB connection failed!")
@@ -286,25 +291,6 @@ def last():
         db_conn.close()
 
         return output
-
-
-def setup_db_connection(host, user, passwd, db):
-    #Connect to Database
-    try:
-        db = MySQLdb.connect(host, user, passwd, db)
-    except:
-        print("Database connection failed!")
-        db = None
-    return db
-
-
-def check_table_exists(db_cursor, table_name):
-    #print("Checking whether the " + table_name + " table already exists")
-
-    table_check = "SHOW TABLES LIKE '%" + table_name + "%'"
-    db_cursor.execute(table_check)
-    #print("Rows returned: " + str(cursor.rowcount))
-    return db_cursor.fetchone()                         # this will be None for none existent table
 
 
 def dump_all_db_data_out(db_cursor):
@@ -379,79 +365,3 @@ def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
 
     return no_of_sensors, sensor_ids
 
-
-def find_all_temp_sensors_connected():
-    all_sensors_list = []
-    devices = glob.glob('/sys/bus/w1/devices/' + '28*')
-    #write_to_log(">> find_all_temp_sensors_connected()")
-    count = 0
-    if len(devices):
-        #write_to_log("   " + str(len(devices)) + " sensor(s) found:")
-        for count, sensor in enumerate(devices):
-            sensor_name = sensor.strip()[-15:]
-            #write_to_log("     " + sensor.strip()[-15:])
-            all_sensors_list.append(sensor_name)
-    else:
-        #write_to_log("   No Sensors found!")
-        all_sensors_list = None      
-    #write_to_log("<< find_all_temp_sensors_connected()")
-    return all_sensors_list
-
-
-def check_wireless_network_connection():
-    #write_to_log(">> check_wireless_network_connection()")
-    ssid = ''
-    quality = 0
-    level = 0
-    result = None
-    #ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        outbytes = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
-        output = str(outbytes)
-        find_start_of_ssid = output[output.find('ESSID:')+7:len(output)]
-        ssid = find_start_of_ssid[0:find_start_of_ssid.find('"')]
-        #write_to_log("   WiFi SSID: " + ssid)
-        result = 0
-    except subprocess.CalledProcessError:
-        # grep did not match any lines
-        print("ERROR    No wireless networks connected!!")
-
-    if result is not None:
-        ps = subprocess.Popen(['iwlist', 'wlan0', 'scan'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
-        outbytes = subprocess.check_output(('grep', 'Quality'), stdin=ps.stdout)
-        output = str(outbytes)
-        pos = output.find('Quality=')
-        quality_str = output[pos+len('Quality='):len(output)]
-        quality_str = quality_str[0:2]
-        quality = int((float(quality_str) / 70.0) * 100.0)
-        #write_to_log("   WiFi Signal quality: " + str(quality) + "%")
-
-        pos = output.find('Signal level=')
-        level_str = output[pos+len('Signal level='):len(output)]
-        level_str = level_str[0:3]
-        level = int(level_str)
-        #write_to_log("   WiFi Signal Level: " + str(level) + "dBm")
-
-    #write_to_log("<< check_wireless_network_connection()")
-    return ssid, quality, level
-
-
-def get_local_ip_address():
-    ip_address = "No network"
-    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
-        output = str(outbytes)
-        #print(output)
-        find_start_of_ip = output[output.find('inet ')+5:len(output)]
-        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
-        #write_to_log("   IP Address: " + ip_address)
-        #time.sleep(1)
-    except subprocess.CalledProcessError:
-        time.sleep(0.2)  #Do nothing!!
-    return ip_address
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)

@@ -1,5 +1,6 @@
 #!/usr/bin/python3.5
 
+import common_functions as cfuncs
 import datetime
 import os
 import glob
@@ -26,6 +27,8 @@ log_to_console = True
 
 email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
 email_passwd = "!P4yrrebpsaR"
+
+lg = "temps"
 
 Global_db_cursor = None
 Global_db_conn = None
@@ -120,25 +123,6 @@ def clean_shutdown():
     sys.exit(0)
 
 
-def find_all_temp_sensors_connected():
-    all_sensors_list = []
-    devices = glob.glob(base_dir + '28*')
-    write_to_log(">> find_all_temp_sensors_connected()")
-    count = 0
-    if len(devices):
-        write_to_log("   " + str(len(devices)) + " sensor(s) found:")
-        for count, sensor in enumerate(devices):
-            sensor_name = sensor.strip()[-15:]
-            write_to_log("     " + sensor.strip()[-15:])
-        
-            all_sensors_list.append(sensor_name)
-    else:
-        write_to_log("   No Sensors found!")
-        all_sensors_list = None      
-    write_to_log("<< find_all_temp_sensors_connected()")
-    return all_sensors_list
-
-
 def find_temp_sensor_pos(sensor_id):
     devices = glob.glob(base_dir + '28*')
     #print("Looking for sensor: " + str(sensor_id) + ", in folder " + base_dir)
@@ -199,27 +183,6 @@ def read_temp(sensor_id):
         write_to_log("<< read_temp()")
         return temp_c
     write_to_log("<< read_temp()")
-
-
-def setup_db_connection(host, db, user, passwd):
-    write_to_log(">> setup_db_connection()")
-
-    try:
-        db = MySQLdb.connect(host, user, passwd, db)
-    except:
-        write_to_log("***Database connection failed!")
-        db = None
-    write_to_log("<< setup_db_connection()")
-    return db
-
-
-def check_table_exists(db_cursor, table_name):
-    write_to_log("   Checking whether the " + table_name + " table already exists")
-
-    table_check = "SHOW TABLES LIKE '%" + table_name + "%'"
-    db_cursor.execute(table_check)
-    #print("Rows returned: " + str(cursor.rowcount))
-    return db_cursor.fetchone()                         # this will be None for none existent table
 
 
 def create_temp_readings_table(db_cursor):
@@ -284,7 +247,7 @@ def delete_sensors_table(db_conn, db_cursor):
 def manage_settings_db_and_dict_stuff(db_conn, db_cursor):
     write_to_log(">> manage_settings_db_stuff()")
     
-    result = check_table_exists(db_cursor, "TEMP_APP_SETTINGS")
+    result = cfuncs.check_table_exists(lg, db_cursor, "TEMP_APP_SETTINGS")
     if result is None:
         write_to_log("*** NO TEMP_APP_SETTINGS Table")
         if create_settings_table(db_conn, db_cursor) is None:
@@ -454,72 +417,6 @@ def dump_all_db_data_out(db_cursor):
         write_to_log(id + " " + date + " " + temp_sensor_db_id + " " + temp_sensor_id + " " + temp)
 
 
-def check_wireless_network_connection():
-    write_to_log(">> check_wireless_network_connection()")
-    ssid = ''
-    quality = 0
-    level = 0
-    result = None
-
-    ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        outbytes = subprocess.check_output(('grep', 'off/any'), stdin=ps.stdout) #this will fail if connected!!
-        
-    except subprocess.CalledProcessError:
-        # this means there was a network found as 'off/any' only occurs when not connected
-        ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        outbytes = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
-        output = str(outbytes)
-        find_start_of_ssid = output[output.find('ESSID:')+7:len(output)]
-        ssid = find_start_of_ssid[0:find_start_of_ssid.find('"')]
-        result = True
-        write_to_log("   WiFi SSID: " + ssid)
-        result = 0
-    
-    if result is not None:    
-        ps = subprocess.Popen(['iwconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        outbytes = subprocess.check_output(('grep', 'Quality'), stdin=ps.stdout)
-        output = str(outbytes)
-        pos = output.find('Quality=')
-        quality_str = output[pos+len('Quality='):len(output)]
-        quality_str = quality_str[0:2]
-        quality = int((float(quality_str) / 70.0) * 100.0)
-        write_to_log("   WiFi Signal quality: " + str(quality) + "%")
-    
-        pos = output.find('Signal level=')
-        level_str = output[pos+len('Signal level='):len(output)]
-        level_str = level_str[0:3]
-        level = int(level_str)
-        write_to_log("   WiFi Signal Level: " + str(level) + "dBm")
-    else:
-        write_to_log("***** No wireless network connection")
-        
-    write_to_log("<< check_wireless_network_connection()")
-    return ssid, quality, level
-
-
-def get_local_ip_address():
-    write_to_log(">> get_local_ip_address()")
-
-    ip_address = None
-    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
-        output = str(outbytes)
-        #print(output)
-        find_start_of_ip = output[output.find('inet ')+5:len(output)]
-        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
-        write_to_log("   IP Address: " + ip_address)
-        #time.sleep(1)
-    except subprocess.CalledProcessError:
-        # grep did not match any lines
-        write_to_log("ERROR    No wireless networks connected!!")
-        #time.sleep(5)
-    
-    write_to_log("<< get_local_ip_address()")
-    return ip_address
-
-
 def send_email(user, pwd, recipient, subject, body):
     write_to_log(">> send_email()")
     FROM = user
@@ -553,21 +450,22 @@ def do_main():
     global Global_db_cursor
     global Global_dict
     global send_start_up_status_email
+
     safe_to_unplug(True)
     all_sensors_list = None
     write_to_log("------------------------    Checking Network Connection OK   ------------------------")
 
-    ssid, quality, level = check_wireless_network_connection()
+    ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     if ssid == '':
         sys.exit(0)
 
-    ip_address = get_local_ip_address()
+    ip_address = cfuncs.get_local_ip_address(lg)
     
     network_status(True)
     
     write_to_log("------------------------    Checking Database Connection OK   -----------------------")
 
-    db_conn = setup_db_connection("localhost", database_name, database_user_name, database_password)
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", database_name, database_user_name, database_password)
     if db_conn is None:
         write_to_log("ERROR  - DB connection failed!")
         clean_shutdown()
@@ -584,7 +482,7 @@ def do_main():
     
     manage_settings_db_and_dict_stuff(db_conn, cursor)
 
-    result = check_table_exists(cursor, "TEMP_READINGS")
+    result = cfuncs.check_table_exists(lg, cursor, "TEMP_READINGS")
     if result is None:
         write_to_log("*** NO TEMP_READINGS Table")
         if create_temp_readings_table(cursor) is None:
@@ -592,7 +490,7 @@ def do_main():
     else:
         write_to_log("   OK - TEMP_READINGS table exists")
 
-    result = check_table_exists(cursor, "TEMP_SENSORS")
+    result = cfuncs.check_table_exists(lg, cursor, "TEMP_SENSORS")
     if result is None:
         write_to_log("*** NO TEMP_SENSORS Table")
         if create_sensors_table(db_conn, cursor) is None:
@@ -610,7 +508,7 @@ def do_main():
             clean_shutdown()
 
     while all_sensors_list is None:
-        all_sensors_list = find_all_temp_sensors_connected()
+        all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
         if all_sensors_list is None:
             write_to_log("***Waiting 5 seconds before trying again")
             time.sleep(5)
@@ -637,13 +535,13 @@ def do_main():
     time.sleep(settle_time)
 
     while True:
-        ssid, quality, level = check_wireless_network_connection()
+        ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
         if ssid != '':
             network_status(True)
         else:
             network_status(False)
             
-        all_sensors_list = find_all_temp_sensors_connected()
+        all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
         no_of_sensors = len(all_sensors_list)
         if no_of_sensors == 3:
             expected_sensor_count(True)
