@@ -9,6 +9,7 @@ import MySQLdb
 import RPi.GPIO as GPIO
 import signal
 import smtplib
+import socket
 import subprocess
 import sys
 import time
@@ -22,11 +23,10 @@ database_user_name = "temps_user"
 database_password = "user"
 
 send_start_up_status_email = "false"
+log_to_console = True
 
 email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
 email_passwd = "!P4yrrebpsaR"
-
-owner_email_addr = "moc.liamg@draws.rednef"
 
 Global_db_cursor = None
 Global_db_conn = None
@@ -69,7 +69,12 @@ def write_to_log(text_to_write):
             logfile =  open('log.txt', 'a')
             now = datetime.datetime.now()
             log_date = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
-            logfile.write(log_date + " " + text_to_write + "\n")
+            log_string = log_date + " " + text_to_write
+            
+            logfile.write(log_string + "\n")
+            if log_to_console == True:
+                print(log_string)
+                
             logfile.close()
         except:
             print("Failed to open log.txt for writing")
@@ -275,7 +280,32 @@ def delete_sensors_table(db_conn, db_cursor):
         return None
 
 
-def create_settings_table_and_set_defaults(db_conn, db_cursor):
+def manage_settings_db_and_dict_stuff(db_conn, db_cursor):
+    write_to_log(">> manage_settings_db_stuff()")
+    
+    result = check_table_exists(db_cursor, "TEMP_APP_SETTINGS")
+    if result is None:
+        write_to_log("*** NO TEMP_APP_SETTINGS Table")
+        if create_settings_table(db_conn, db_cursor) is None:
+            clean_shutdown()
+    else:
+        write_to_log("   OK - TEMP_APP_SETTINGS table exists")
+
+    existing, added = check_for_settings_for_defaults_and_updates(db_conn, db_cursor)
+    if existing is None:
+        clean_shutdown()
+    else:
+        write_to_log("   " + str(existing) + " settings already existed")
+        write_to_log("   " + str(added) + " settings added")
+
+    global Global_dict
+    Global_dict = settings_db_to_dictionary(db_cursor)
+    
+    write_to_log("<< manage_settings_db_stuff()")
+    return None
+
+
+def create_settings_table(db_conn, db_cursor):
     write_to_log("   Creating table for settings")
     sql = """CREATE TABLE TEMP_APP_SETTINGS (
              settings_id INT NOT NULL AUTO_INCREMENT,
@@ -293,20 +323,43 @@ def create_settings_table_and_set_defaults(db_conn, db_cursor):
         write_to_log("   TEMP_APP_SETTINGS table creation failed!!")
         return None
 
-    sql = """INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) 
-             VALUES ('sensor_polling_freq', '300', NOW()), 
-                    ('write_to_logfile', 'true', NOW()),
-                    ('start_up_status_email', 'false', NOW()),
-                    ('first_read_settle_time', '30', NOW())"""
-    try:
-        db_cursor.execute(sql)
-        db_conn.commit()
-        write_to_log("   TEMP_APP_SETTINGS table updated OK")
-    except:
-        db_conn.rollback()
-        write_to_log("   TEMP_APP_SETTINGS table update failed!!")
-        return None
     return 0
+
+
+def check_for_settings_for_defaults_and_updates(db_conn, db_cursor):
+    write_to_log(">> check_for_settings_for_defaults_and_updates()")
+    
+    settings = [('sensor_polling_freq', '300'),
+                ('write_to_logfile', 'true'),
+                ('start_up_status_email', 'false'),
+                ('first_read_settle_time', '30'),
+                ('email_recipient_addr', 'moc.liamg@draws.rednef')]
+    
+    no_of_settings = len(settings)
+    settings_added = 0
+    settings_existing = 0
+    
+    for setting in settings:
+        setting, value = setting
+        query = "SELECT name FROM temps.TEMP_APP_SETTINGS WHERE name = '" + setting + "'"
+        db_cursor.execute(query)
+        if db_cursor.rowcount == 0:
+            insert_sql = "INSERT INTO TEMP_APP_SETTINGS (name, value, last_updated) VALUES ('" + setting + "', '" +  value + "', NOW())"
+            try:
+                db_cursor.execute(insert_sql)
+                db_conn.commit()
+                write_to_log("   ADDED: Setting:  " + setting + "   Value: " + value)
+                settings_added += 1
+            except:
+                db_conn.rollback()
+                write_to_log("   TEMP_APP_SETTINGS table update failed!!")
+                return None, None
+        else:
+            settings_existing += 1
+            #write_to_log("   EXISTS: Setting:  " + setting + "   Value: " + value)
+            
+    write_to_log("<< check_for_settings_for_defaults_and_updates()")    
+    return settings_existing, settings_added
 
     
 def settings_db_to_dictionary(db_cursor):
@@ -502,7 +555,6 @@ def do_main():
     safe_to_unplug(True)
     all_sensors_list = None
     write_to_log("------------------------    Checking Network Connection OK   ------------------------")
-    print("\n------------------------    Checking Network Connection OK   ------------------------\n")
 
     ssid, quality, level = check_wireless_network_connection()
     if ssid == '':
@@ -513,7 +565,7 @@ def do_main():
     network_status(True)
     
     write_to_log("------------------------    Checking Database Connection OK   -----------------------")
-    print("\n------------------------    Checking Database Connection OK   -----------------------\n")
+
     db_conn = setup_db_connection("localhost", database_name, database_user_name, database_password)
     if db_conn is None:
         write_to_log("ERROR  - DB connection failed!")
@@ -528,14 +580,8 @@ def do_main():
     #Setup a Query
     #query = "SELECT * FROM test.temps WHERE date_of_reading < STR_TO_DATE('24/12/2018 17:00', '%d/%m/%Y %H:%i') "
     safe_to_unplug(False)
-    result = check_table_exists(cursor, "TEMP_APP_SETTINGS")
-    if result is None:
-        write_to_log("*** NO TEMP_APP_SETTINGS Table")
-        if create_settings_table_and_set_defaults(db_conn, cursor) is None:
-            clean_shutdown()
-    else:
-        write_to_log("   OK - TEMP_APP_SETTINGS table exists")
-    Global_dict = settings_db_to_dictionary(cursor)  
+    
+    manage_settings_db_and_dict_stuff(db_conn, cursor)
 
     result = check_table_exists(cursor, "TEMP_READINGS")
     if result is None:
@@ -554,7 +600,7 @@ def do_main():
         write_to_log("   OK - TEMP_SENSORS table exists")
 
     write_to_log("-------------------    Finished DB connection and setup all OK   -------------------")
-    print("\n-------------------    Finished DB connection and setup all OK   -------------------\n")
+
     safe_to_unplug(True)
     result = reset_sensor_connected_status(db_conn, cursor)
     if result is None:
@@ -574,19 +620,16 @@ def do_main():
     else:
         expected_sensor_count(False)
 
-    if 'start_up_status_email' in Global_dict:
-        send_start_up_status_email = Global_dict['start_up_status_email']
-        write_to_log("start_up_status_email from dictionary is: " + send_start_up_status_email)
-    else:
-        write_to_log("*****EMAIL:  start_up_status_email not in dictionary (and hence DB!)")
-
     #Override for start emails!
-    send_start_up_status_email = "false"
+    send_start_up_status_email = "true"
     
+    send_start_up_status_email = Global_dict['start_up_status_email']
     if send_start_up_status_email == "true":
-        send_email(email_user[::-1], email_passwd[::-1], owner_email_addr[::-1], "PI Temperature Monitoring Power Up Status", 
-               "\nInitial startup and checking of DB OK\n\n" + str(len(all_sensors_list)) + 
-               " Temperature Sensors detected\n\nConnected to the WiFi network: " + ssid + "  OK\n\nWeb address http://" + ip_address + ":5000/home\n")
+        send_email(email_user[::-1], email_passwd[::-1], Global_dict['email_recipient_addr'][::-1], 
+               "PI Temperature Monitoring Power Up Status", 
+               "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
+               "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + "\n\n\nHome page:\nhttp://" + ip_address + 
+               ":5000/home\n                       or\nhttp://" + socket.gethostname() + ".local:5000/home\n\n")
     
     settle_time = int(Global_dict['first_read_settle_time'])
     write_to_log("Waiting %d seconds for the initial readings" % settle_time)
@@ -620,7 +663,7 @@ def do_main():
                 write_to_log("***No info for sensor " + sensor_name + ", ignoring! Temp is " + str(read_temp(sensor_name)))
         loop_time = int(Global_dict['sensor_polling_freq'])
         write_to_log("The next reading will be taken in " + str(int(round(loop_time / 60, 0))) + " minutes")
-        print("\n-----------   Temperature Sensor Readings Taken Now Waiting for loop time   --------\n")
+        print("\n-----------   Temperature Sensor Readings Taken, Now Waiting for loop time   --------\n")
         safe_to_unplug(True)
         time.sleep(loop_time)
         os.system('clear')
