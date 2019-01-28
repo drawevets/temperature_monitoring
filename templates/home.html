@@ -1,4 +1,34 @@
 {% extends "layout.html" %}
 {% block content %}
-
+<div class="container">
+    <div class="row">
+        <div class="col-md7">
+            <div class="current_temps">
+                <table class="table table-bordered text-centered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Sensor Name</th>
+                            <th>Sensor ID</th>
+                            <th>Date / Time</th>
+                            <th>Temperature</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if temp_data %}
+                            {% for sensor_name, sensor_id, temp, time in temp_data %}
+                                <tr>
+                                    <td> {{ sensor_name }} </td>
+                                    <td> {{ sensor_id }} </td>
+                                    <td> {{ time }} </td>
+                                    <td> {{ temp }} </td>
+                                </tr>
+                            {% endfor%}
+                        {% endif %}
+                    </tbody>
+                    </br>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}

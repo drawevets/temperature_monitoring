@@ -8,6 +8,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #444444;
 }
 
+h2 {
+  color: #191919;
+}
+
 .bg-steel {
   background-color: #300081;
 }
@@ -22,6 +26,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .site-header .navbar-nav .nav-link.active {
   font-weight: 500;
+}
+
+.current_temps .table {
+    text-align: center;
 }
 
 .content-section {

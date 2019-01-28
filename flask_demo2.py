@@ -31,17 +31,30 @@ def home():
         return("<html><h1>DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    temp_readings = []  
+    sensor_names = []
+    sensor_ids = []
+    temp_readings = []
+    current_datetime = []
     for sensor_name in all_sensors_list:
         db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, False)      
         if db_sensor_id is not None:
             temperature = cfuncs.read_temp(lg, sensor_name) + offset
-            temp_readings.append(sensor_name)
-            temp_readings.append(temperature)
+            temperature = round(temperature,1)                          # Round to 1 decimal place
+            sensor_names.append("TBC")
+            sensor_ids.append(sensor_name)
+            temp_readings.append(str(temperature))
             
-    print(temp_readings)
-        
-    return render_template('home.html', version=vstring, page_heading='Home', title='Home')   
+            now = datetime.datetime.now()
+            current_datetime.append(now.strftime("%d/%m/%y %X"))     # 24-Hour:Minute
+
+    temp_details = list(zip(sensor_names, sensor_ids, temp_readings, current_datetime))
+
+    #print(datetime.datetime.now())
+    
+    return render_template('home.html', version = vstring,
+                                        page_heading = 'Current Temp Readings', 
+                                        title = 'Home', 
+                                        temp_data = temp_details)   
 
 
 @app.route("/status")
