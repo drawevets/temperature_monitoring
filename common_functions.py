@@ -10,7 +10,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.11  Last updated: 28/01/19")
+    return ("v0.12  Last updated: 30/01/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -127,6 +127,41 @@ def find_temp_sensor_id_and_offset(caller, db_conn, db_cursor, sensor_id, update
         write_to_log(caller, "cf:***Sensor info not found in DB***")
     write_to_log(caller, "cf: << find_temp_sensor_id_and_offset()")
     return id, temp_offset
+
+
+def get_all_connected_sensor_ids(caller, db_cursor):
+    write_to_log(caller, "cf: >> get_all_connected_sensor_ids()")
+    query = "SELECT sensor_id FROM temps.TEMP_SENSORS WHERE connected = '1'"
+    db_cursor.execute(query)
+    sensor_ids = []
+    write_to_log(caller, "   Sensors currently coonnected:")
+    for row in db_cursor.fetchall():
+        write_to_log(caller, str(row[0]))
+        sensor_ids.append(str(row[0]))
+        
+    write_to_log(caller, sensor_ids)
+    write_to_log(caller, "cf: << get_all_connected_sensor_ids()")
+    return sensor_ids
+
+
+def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
+    write_to_log(caller, "cf: >> get_last_temperature_reading_from_db()")
+    query = """SELECT CONCAT(DAY(TEMP_READINGS.date_added), '/',MONTH(TEMP_READINGS.date_added), '/',YEAR(TEMP_READINGS.date_added),' ',HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      TEMP_SENSORS.temp_sensor_alias,
+                      TEMP_SENSORS.temp_sensor_id
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE temp_sensor_db_id = """ + sensor_id + " ORDER BY temp_id DESC LIMIT 1"
+    no_rows = db_cursor.execute(query)
+    for row in db_cursor.fetchall():
+        reading_date = str(row[0])
+        temperature = str(row[1])
+        temp_sensor_alias = str(row[2])
+        temp_sensor_id = str(row[3])
+        
+    return reading_date, temperature, temp_sensor_alias, temp_sensor_id
+    write_to_log(caller, "cf: << get_last_temperature_reading_from_db()")
 
 
 def get_local_ip_address(caller):

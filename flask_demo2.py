@@ -24,13 +24,51 @@ app = Flask(__name__)
 def home():
     vstring = cfuncs.app_version()
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
-#                                             Location   DB Name    DB Username   DB Passwd 
+#                                         Log     Location   DB Name    DB Username   DB Passwd 
     db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
 
     if db_conn is None:
         return("<html><h1>DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
+    
+    sensors_connected = cfuncs.get_all_connected_sensor_ids("web", cursor)
+    
+    reading_dates = []
+    temperatures = []
+    temp_sensor_aliass = []
+    temp_sensor_ids = []
+    
+    for sensor_id in sensors_connected:
+        reading_date, temperature, temp_sensor_alias, temp_sensor_id = cfuncs.get_last_temperature_reading_from_db("web", cursor, sensor_id)
+        reading_dates.append(reading_date)
+        temperatures.append(temperature)
+        temp_sensor_aliass.append(temp_sensor_alias)
+        temp_sensor_ids.append(temp_sensor_id)
+    
+    temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
+    
+    print(temp_details)
+    
+    return render_template('home.html', version = vstring,
+                                        page_heading = 'Last Recorded Temperature Readings', 
+                                        title = 'Live Temps', 
+                                        temp_data = temp_details)     
+
+
+@app.route("/")
+@app.route("/current_temps")
+def current_temps():
+    vstring = cfuncs.app_version()
+    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+#                                         Log     Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+     
     sensor_names = []
     sensor_ids = []
     temp_readings = []
@@ -48,13 +86,11 @@ def home():
             current_datetime.append(now.strftime("%d/%m/%y %X"))     # 24-Hour:Minute
 
     temp_details = list(zip(sensor_names, sensor_ids, temp_readings, current_datetime))
-
-    #print(datetime.datetime.now())
     
-    return render_template('home.html', version = vstring,
-                                        page_heading = 'Current Temp Readings', 
-                                        title = 'Home', 
-                                        temp_data = temp_details)   
+    return render_template('live_temps.html', version = vstring,
+                                        page_heading = 'Current Temperature Readings', 
+                                        title = 'Current Temps', 
+                                        temp_data = temp_details)  
 
 
 @app.route("/status")
@@ -267,75 +303,6 @@ def overview():
         return output
 
 
-@app.route('/all')
-def all():
-        #                              Location     DB Username   DB Passwd DB Name
-        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
-        db_temp_readings_table = "TEMP_READINGS"
-        if db_conn is None:
-            print("DB connection failed!")
-            #sys.exit(0)
-        else:
-            print("DB connection OK")
-
-        #Setup a 'Cursor' to the Database connection
-        cursor = db_conn.cursor()
-
-        result = check_table_exists(cursor, db_temp_readings_table)
-
-        if result is None:
-            print("NO Table")
-            cursor.close()
-            db_conn.close()
-            sys.exit(0)
-        else:
-            print("OK - Table exists")
-
-        #query = "SELECT * FROM temps.TEMP_READINGS ORDER BY temp_id DESC"
-        query = "SELECT TEMP_READINGS.date_added, temp_sensor_alias, temperature FROM temps.TEMP_READINGS JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id ORDER BY temp_id DESC"
-
-        output = run_query_and_dump_all_db_data_out(cursor, query, "All data recorded to date (last first)")
-
-        cursor.close()
-        db_conn.close()
-
-        return output
-
-
-@app.route('/last')
-def last():
-        #                              Location     DB Username   DB Passwd DB Name
-        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
-        db_temp_readings_table = "TEMP_READINGS"
-        if db_conn is None:
-            print("DB connection failed!")
-            #sys.exit(0)
-        else:
-            print("DB connection OK")
-
-        #Setup a 'Cursor' to the Database connection
-        cursor = db_conn.cursor()
-    
-        result = check_table_exists(cursor, db_temp_readings_table)
-
-        if result is None:
-            print("NO Table")
-            cursor.close()
-            db_conn.close()
-            sys.exit(0)
-        else:
-            print("OK - Table exists")
-
-        query = "SELECT * FROM temps.TEMP_READINGS"
-    
-        output = run_query_and_dump_last_entry_only(cursor, query, " id  datetime  sensor_id  sensor_name  temperature")
-
-        cursor.close()
-        db_conn.close()
-
-        return output
-
-
 def dump_all_db_data_out(db_cursor):
     query = "SELECT * FROM test.TEMP_READINGS"
     db_cursor.execute(query)
@@ -384,17 +351,6 @@ def run_query_and_dump_out_overview(db_cursor, query, description):
         max = str(row[3])
         all_data = all_data + date + " " + min + " " + avg + " " + max + "</br>"
     all_data += "</h2></html>"
-    return all_data
-
-
-def run_query_and_dump_last_entry_only(db_cursor, query, description):
-    db_cursor.execute(query)
-    for row in db_cursor.fetchall():
-        id = str(row[0])
-        datetime = str(row[1])
-        sensor_id = str(row[2])
-        temperature = str(row[3])
-    all_data = "<html><h1> The last temperature reading was: " + temperature + " degC @ " + datetime + "</h1></html>"
     return all_data
 
 
