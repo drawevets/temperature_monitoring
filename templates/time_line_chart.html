@@ -9,7 +9,7 @@
         // do not resize the chart canvas when its container does (keep at 600x400px)
         Chart.defaults.global.responsive = true;
         Chart.defaults.global.animation.duration = 2000;
-        Chart.defaults.scatter.spanGaps = false;
+        Chart.defaults.scatter.spanGaps = true;
 
         // get chart canvas
         var ctx = document.getElementById("Temps_Chart").getContext("2d");
@@ -131,19 +131,26 @@
                     }],
                     xAxes: [{
                         //type: 'time',
-                        distribution: 'linear',
+                        //distribution: 'linear',
                         ticks: {
                             // Convert UNIX time back to something meaningful
                             callback: function(value, index, values) {
                                     full = new Date(value);
+                                    day = full.getDate();
+                                    month = full.getMonth();
+                                    year = full.getFullYear();
                                     hours = full.getHours();
                                     hours = ("0"+hours).slice(-2); // Pad with leading zero
                                     minutes = full.getMinutes();
                                     minutes = ("0"+minutes).slice(-2); // Pad with leading zero
-                                    return (hours + ':' + minutes);
+                                    return (day + '/' + month + '/' + year + ' ' + hours + ':' + minutes);
                                 },
-                                min: {{ xaxis[0] }},
-                                max: {{ xaxis[1] }},
+                                {% if xaxis %}
+                                    min: {{ xaxis[0] }},
+                                    max: {{ xaxis[1] }},
+                                {% else %}
+
+                                {% endif %}
                                 //stepSize: 3600000,
                                 fontSize: 12,
                                 fontStyle: 'normal'

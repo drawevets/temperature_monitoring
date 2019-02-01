@@ -26,7 +26,9 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-                <a class="nav-item nav-link" href="{{ url_for('time_chart') }}">Todays Chart</a>
+                <a class="nav-item nav-link" href="{{ url_for('today_chart') }}">Todays Chart</a>
+                <a class="nav-item nav-link" href="{{ url_for('twentyfourhour_chart') }}">24hr Chart</a>
+                <a class="nav-item nav-link" href="{{ url_for('weekoverview_chart') }}">Week Overview</a>
                 <a class="nav-item nav-link" href="{{ url_for('current_temps') }}">Current Temps</a>
             </div>
             <!-- Navbar Right Side -->

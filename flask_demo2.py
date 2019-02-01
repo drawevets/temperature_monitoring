@@ -121,8 +121,103 @@ def about():
     return render_template('about.html', version=vstring, page_heading='About', title='About')
 
 
-@app.route("/time_chart")
-def time_chart():
+@app.route("/twentyfourhour_chart")
+def twentyfourhour_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
+               GROUP BY temp_sensor_db_id"""
+
+    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
+                             MONTH(TEMP_READINGS.date_added),',',
+                             DAY(TEMP_READINGS.date_added),',',
+                             HOUR(TEMP_READINGS.date_added),',',
+                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 DAY)
+               ORDER BY TEMP_READINGS.date_added ASC"""
+
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data1 = []
+    data2 = []
+    data3 = []
+
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+        if row[2] == 1:
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == 2:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == 5:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+    
+    #formatted_data = str(data1).replace('\'', '')
+    #print(formatted_data)
+    #print(data1)
+    
+    cursor.close()
+    db_conn.close()
+    vstring = cfuncs.app_version()
+    
+    twenty4hoursbefore = datetime.datetime.now() - datetime.timedelta(days=1)
+    now = datetime.datetime.now()
+    xaxis_info = []
+    xaxis_info.append("new Date(" + str(twenty4hoursbefore.year) + "," + str(twenty4hoursbefore.month) + "," + str(twenty4hoursbefore.day) + "," + str(twenty4hoursbefore.hour) + "," + str(twenty4hoursbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    print("XAxis Min:  new Date(" + str(twenty4hoursbefore.year) + "," + str(twenty4hoursbefore.month) + "," + str(twenty4hoursbefore.day) + "," + str(twenty4hoursbefore.hour) + "," + str(twenty4hoursbefore.minute) + ")")
+    print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    
+    page_title = '24hr Temps'
+    chart_title = 'Temperature Readings for the last 24 hours'
+    return render_template('time_line_chart.html',
+                           version=vstring,
+                           page_heading = '',
+                           title=page_title,
+                           temps1=str(data1).replace('\'', ''), 
+                           temps2=str(data2).replace('\'', ''), 
+                           temps3=str(data3).replace('\'', ''), 
+                           series1=legend1, 
+                           series2=legend2, 
+                           series3=legend3,
+                           chart_title=chart_title,
+                           xaxis = xaxis_info)
+
+
+@app.route("/today_chart")
+def today_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
     db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
 
@@ -195,7 +290,7 @@ def time_chart():
     xaxis_info = []
     # X Axis to start at 00:00 and end at 24:00 of the same day i.e. the current day!
     xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",0,0)")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",24,0)")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",23,59)")
     
     page_title = 'Todays Temps'
     chart_title = 'Temperature Readings for Today Only'
@@ -213,16 +308,17 @@ def time_chart():
                            xaxis = xaxis_info)
 
 
-@app.route("/today_chart")
-def today_chart():
-    #                              Location     DB Username   DB Passwd DB Name
-    db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
+@app.route("/weekoverview_chart")
+def weekoverview_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
     db_temp_readings_table = "TEMP_READINGS"
     if db_conn is None:
         return("<html><h1>DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = check_table_exists(cursor, db_temp_readings_table)
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -237,85 +333,75 @@ def today_chart():
                GROUP BY temp_sensor_db_id"""
 
     no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+
     if no_of_sensors == 0:
         return("<html><h1>No temperature data for today yet!</h1></html>")
 
     if no_of_sensors != 3:
         return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    #print(sensor_list)
     
-    query = """SELECT CONCAT(HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
-                      temperature, 
-                      temp_sensor_db_id, 
-                      temp_sensor_alias 
-               FROM temps.TEMP_READINGS 
-               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
-               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
-               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
+    all_sensor_aliases = []
+    all_dates = []
+    all_min_temps = []
+    all_avg_temps = []
+    all_max_temps = []
     
-    cursor.execute(query)
+    for sensor in sensor_list:
+        dates = []
+        min_temps = []
+        avg_temps = []
+        max_temps = []
+        query = """SELECT DATE_FORMAT(TEMP_READINGS.date_added, '%d/%m/%y'), 
+                          MIN(TEMP_READINGS.temperature), 
+                          ROUND(AVG(TEMP_READINGS.temperature), 1), 
+                          MAX(TEMP_READINGS.temperature),
+                          TEMP_SENSORS.temp_sensor_alias
+                          FROM TEMP_READINGS
+                          JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+                          WHERE TEMP_READINGS.temp_sensor_db_id = """ + str(sensor) + """
+                          GROUP BY DATE_FORMAT(TEMP_READINGS.date_added, '%d/%m/%y')
+                          ORDER BY TEMP_READINGS.date_added DESC 
+                          LIMIT 7"""
+        cursor.execute(query)
+        count = 0
+        for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+            if count == 0:
+                all_sensor_aliases.append(row[4])
+                count += 1
+            dates.append(str(row[0]))
+            min_temps.append(row[1])
+            avg_temps.append(row[2])
+            max_temps.append(row[3])
 
-    date_1 = []
-    date_2 = []
-    date_3 = []
-    temps_1 = []
-    temps_2 = []
-    temps_3 = []
-    for row in cursor.fetchall():
-        if row[2] == 1:
-            legend1 = str(row[3])
-            date_1.append(str(row[0]))
-            temps_1.append(row[1])
-        if row[2] == 2:
-            legend2 = str(row[3])
-            date_2.append(str(row[0]))
-            temps_2.append(row[1])
-        if row[2] == 5:
-            legend3 = str(row[3])
-            date_3.append(str(row[0]))
-            temps_3.append(row[1])
+        all_dates.append(list(reversed(dates)))
+        all_min_temps.append(list(reversed(min_temps)))
+        all_avg_temps.append(list(reversed(avg_temps)))
+        all_max_temps.append(list(reversed(max_temps)))
+    
     cursor.close()
     db_conn.close()
-    vstring = cfuncs.app_version()
-    
-    title = 'Old Today Only'
-    return render_template('chart.html', version=vstring, values1=temps_1, values2=temps_2, values3=temps_3, labels=date_1, legend1=legend1, legend2=legend2, legend3=legend3, title=title)
-
-
-@app.route('/overview')
-def overview():
-        #                              Location     DB Username   DB Passwd DB Name
-        db_conn = cfuncs.setup_db_connection("localhost", "temps_reader", "reader", "temps")
-        db_temp_readings_table = "TEMP_READINGS"
-        if db_conn is None:
-            print("DB connection failed!")
-            #sys.exit(0)
-        else:
-            print("DB connection OK")
-
-        #Setup a 'Cursor' to the Database connection
-        cursor = db_conn.cursor()
-
-        result = check_table_exists(cursor, db_temp_readings_table)
-
-        if result is None:
-            print("NO Table")
-            cursor.close()
-            db_conn.close()
-            sys.exit(0)
-        else:
-            print("OK - Table exists")
-
-        query = "SELECT DATE_FORMAT(date_added, '%d/%m/%y'), MIN(temperature), ROUND(AVG(temperature), 1), MAX(temperature) FROM temps.TEMP_READINGS GROUP BY DAYOFMONTH(date_added)"
-
-        output = run_query_and_dump_out_overview(cursor, query, "Date Added   Min  Avg  Max")
-
-        cursor.close()
-        db_conn.close()
- 
-        return output
+        
+    page_title = 'Weekly Overview'
+    chart_title1 = 'Weekly overview of Temperatures (' + all_sensor_aliases[0] + ')'
+    chart_title2 = 'Weekly overview of Temperatures (' + all_sensor_aliases[1] + ')'
+    chart_title3 = 'Weekly overview of Temperatures (' + all_sensor_aliases[2] + ')'
+    return render_template('weekoverview_chart.html',
+                           version=cfuncs.app_version(), title=page_title,
+                           chart_title1=chart_title1,
+                           date_labels1 = all_dates[0],
+                           mins1 = all_min_temps[0],
+                           avgs1 = all_avg_temps[0],
+                           maxs1 = all_max_temps[0],
+                           chart_title2=chart_title2,
+                           date_labels2 = all_dates[1],
+                           mins2 = all_min_temps[1],
+                           avgs2 = all_avg_temps[1],
+                           maxs2 = all_max_temps[1],
+                           chart_title3=chart_title3,
+                           date_labels3= all_dates[2],
+                           mins3 = all_min_temps[2],
+                           avgs3 = all_avg_temps[2],
+                           maxs3 = all_max_temps[2])
 
 
 def dump_all_db_data_out(db_cursor):
