@@ -48,7 +48,7 @@ def home():
     
     temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
     
-    print(temp_details)
+    #print(temp_details)
     
     return render_template('home.html', version = vstring,
                                         page_heading = 'Last Recorded Temperature Readings', 
@@ -87,7 +87,7 @@ def current_temps():
                 now = datetime.datetime.now()
                 current_datetime.append(now.strftime("%d/%m/%y %X"))     # 24-Hour:Minute
 
-        temp_details = list(zip(sensor_names, sensor_ids, temp_readings, current_datetime))
+        temp_details = list(zip(sensor_names, sensor_ids, current_datetime, temp_readings))
     else:
         temp_details = None
         
@@ -184,14 +184,18 @@ def time_chart():
             data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
     #formatted_data = str(data1).replace('\'', '')
-
-    #print("\nFormatted Date and time data:")
     #print(formatted_data)
-    #print("\n")
+    #print(data1)
     
     cursor.close()
     db_conn.close()
     vstring = cfuncs.app_version()
+    
+    now = datetime.datetime.now()
+    xaxis_info = []
+    # X Axis to start at 00:00 and end at 24:00 of the same day i.e. the current day!
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",0,0)")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",24,0)")
     
     page_title = 'Todays Temps'
     chart_title = 'Temperature Readings for Today Only'
@@ -205,7 +209,8 @@ def time_chart():
                            series1=legend1, 
                            series2=legend2, 
                            series3=legend3,
-                           chart_title=chart_title)
+                           chart_title=chart_title,
+                           xaxis = xaxis_info)
 
 
 @app.route("/today_chart")

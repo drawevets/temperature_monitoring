@@ -2,7 +2,7 @@
 {% block content %}
     <script src='static/Chart.min.js'></script>
     <!-- chart canvas element -->
-    <canvas id="Temps_Chart" width="1200" height="1000"></canvas>
+    <canvas id="Temps_Chart" width="1200" height="800"></canvas>
 
     <script>
         // Global parameters:
@@ -142,8 +142,9 @@
                                     minutes = ("0"+minutes).slice(-2); // Pad with leading zero
                                     return (hours + ':' + minutes);
                                 },
-                                beginAtZero: false,
-                                //stepSize: 10000,
+                                min: {{ xaxis[0] }},
+                                max: {{ xaxis[1] }},
+                                //stepSize: 3600000,
                                 fontSize: 12,
                                 fontStyle: 'normal'
                         },
