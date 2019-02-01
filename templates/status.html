@@ -35,21 +35,25 @@
                 </tbody>
             </table>
             </br>
-            <h3>Temperature sensors connected:</h3>
-            <table class="table table-bordered table-sm">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Sensor ID</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sensor in sensors_list %}
+            {% if sensors_list %}
+                <h3>Temperature sensors connected:</h3>
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-light">
                         <tr>
-                            <td>{{ sensor }}</td>
+                            <th>Sensor ID</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for sensor in sensors_list %}
+                            <tr>
+                                <td>{{ sensor }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <h3>No Temperature sensors detected!</h3>
+            {% endif %}
         </div>
     </div>
 </div>

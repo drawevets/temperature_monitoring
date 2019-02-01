@@ -268,7 +268,7 @@ def write_to_log(caller, text_to_write):
         try:
             logfile =  open(log_file, 'a+')
             now = datetime.datetime.now()
-            log_date = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
+            log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
             log_string = log_date + " " + text_to_write
             
             logfile.write(log_string + "\n")

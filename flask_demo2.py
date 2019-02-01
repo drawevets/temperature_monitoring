@@ -61,32 +61,36 @@ def home():
 def current_temps():
     vstring = cfuncs.app_version()
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
-#                                         Log     Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    if all_sensors_list is not None:
+        no_sensors = str(len(all_sensors_list))
+    #                                         Log     Location   DB Name    DB Username   DB Passwd 
+        db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
 
-    if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        if db_conn is None:
+            return("<html><h1>DB connection failed!</h1></html>")
 
-    cursor = db_conn.cursor()
-     
-    sensor_names = []
-    sensor_ids = []
-    temp_readings = []
-    current_datetime = []
-    for sensor_name in all_sensors_list:
-        db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, False)      
-        if db_sensor_id is not None:
-            temperature = cfuncs.read_temp(lg, sensor_name) + offset
-            temperature = round(temperature,1)                          # Round to 1 decimal place
-            sensor_names.append("TBC")
-            sensor_ids.append(sensor_name)
-            temp_readings.append(str(temperature))
-            
-            now = datetime.datetime.now()
-            current_datetime.append(now.strftime("%d/%m/%y %X"))     # 24-Hour:Minute
+        cursor = db_conn.cursor()
+         
+        sensor_names = []
+        sensor_ids = []
+        temp_readings = []
+        current_datetime = []
+        for sensor_name in all_sensors_list:
+            db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, False)      
+            if db_sensor_id is not None:
+                temperature = cfuncs.read_temp(lg, sensor_name) + offset
+                temperature = round(temperature,1)                          # Round to 1 decimal place
+                sensor_names.append("TBC")
+                sensor_ids.append(sensor_name)
+                temp_readings.append(str(temperature))
+                
+                now = datetime.datetime.now()
+                current_datetime.append(now.strftime("%d/%m/%y %X"))     # 24-Hour:Minute
 
-    temp_details = list(zip(sensor_names, sensor_ids, temp_readings, current_datetime))
-    
+        temp_details = list(zip(sensor_names, sensor_ids, temp_readings, current_datetime))
+    else:
+        temp_details = None
+        
     return render_template('live_temps.html', version = vstring,
                                         page_heading = 'Current Temperature Readings', 
                                         title = 'Current Temps', 
@@ -96,13 +100,19 @@ def current_temps():
 @app.route("/status")
 def status():
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
+    
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+    if all_sensors_list is not None:
+        no_sensors = str(len(all_sensors_list))
+    else:
+        no_sensors = 0
+        
     now = datetime.datetime.now()
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
     
-    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=str(len(all_sensors_list)), sensors_list=all_sensors_list)   
+    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=no_sensors, sensors_list=all_sensors_list)   
 
 
 @app.route("/about")
