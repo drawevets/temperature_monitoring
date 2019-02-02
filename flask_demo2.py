@@ -52,7 +52,7 @@ def home():
     
     return render_template('home.html', version = vstring,
                                         page_heading = 'Last Recorded Temperature Readings', 
-                                        title = 'Live Temps', 
+                                        title = 'Last Recorded', 
                                         temp_data = temp_details)     
 
 
@@ -467,5 +467,5 @@ def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
     
