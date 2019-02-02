@@ -114,13 +114,7 @@ def status():
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
     
-    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=no_sensors, sensors_list=all_sensors_list)   
-
-
-@app.route("/about")
-def about():
-    vstring = cfuncs.app_version()
-    return render_template('about.html', version=vstring, page_heading='About', title='About')
+    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=no_sensors, sensors_list=all_sensors_list)
 
 
 @app.route("/twentyfourhour_chart")
