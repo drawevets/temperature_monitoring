@@ -12,7 +12,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.87 - Last updated: 02/02/19")
+    return ("v0.88 - Last updated: 02/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -198,7 +198,13 @@ def get_system_information():
     print("Architecture: " + architecture)
     print("OS Kernel: " + oskernel)
     print("Firmware version: " + firmwareversion)
-    return os, architecture, oskernel, firmwareversion
+
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        uptime_string = str(datetime.timedelta(seconds = uptime_seconds))[0:-7]
+
+    return os, architecture, oskernel, firmwareversion, uptime_string
+
 
 def read_temp(caller, sensor_id):
     write_to_log(caller, "cf: >> read_temp(" + sensor_id + ")")

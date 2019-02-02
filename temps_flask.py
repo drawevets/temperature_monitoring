@@ -113,7 +113,7 @@ def status():
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
-    os, architecture, oskernel, firmwareversion = cfuncs.get_system_information()
+    os, architecture, oskernel, firmwareversion, uptime = cfuncs.get_system_information()
     
     return render_template('status.html',
                             version=vstring,
@@ -122,6 +122,7 @@ def status():
                             os = os, 
                             architecture = architecture,
                             oskernel = oskernel,
+                            uptime = uptime,
                             firmwareversion = firmwareversion,
                             hostname = socket.gethostname(),
                             ip = ip_address,
