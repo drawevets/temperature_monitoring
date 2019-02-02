@@ -76,11 +76,11 @@ def current_temps():
         temp_readings = []
         current_datetime = []
         for sensor_name in all_sensors_list:
-            db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, False)      
+            db_sensor_id, alias, offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_name, False)      
             if db_sensor_id is not None:
                 temperature = cfuncs.read_temp(lg, sensor_name) + offset
                 temperature = round(temperature,1)                          # Round to 1 decimal place
-                sensor_names.append("TBC")
+                sensor_names.append(alias)
                 sensor_ids.append(sensor_name)
                 temp_readings.append(str(temperature))
                 
@@ -138,14 +138,7 @@ def twentyfourhour_chart():
         db_conn.close()
         return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
 
-    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
-               WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
-               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
-               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
-               GROUP BY temp_sensor_db_id"""
-
-    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
     if no_of_sensors == 0:
         return("<html><h1>No temperature data for today yet!</h1></html>")
 
@@ -174,13 +167,13 @@ def twentyfourhour_chart():
     data3 = []
 
     for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == 1:
+        if row[2] == sensor_list[0]:
             legend1 = str(row[3])
             data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == 2:
+        if row[2] == sensor_list[1]:
             legend2 = str(row[3])
             data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == 5:
+        if row[2] == sensor_list[2]:
             legend3 = str(row[3])
             data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
@@ -233,20 +226,12 @@ def today_chart():
         db_conn.close()
         return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
 
-    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
-               WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
-               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
-               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
-               GROUP BY temp_sensor_db_id"""
-
-    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
     if no_of_sensors == 0:
         return("<html><h1>No temperature data for today yet!</h1></html>")
 
     if no_of_sensors != 3:
         return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    #print(sensor_list)
     
     query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',MONTH(TEMP_READINGS.date_added),',',DAY(TEMP_READINGS.date_added),',',HOUR(TEMP_READINGS.date_added),',',MINUTE(TEMP_READINGS.date_added)) as time_added, 
                       temperature, 
@@ -268,13 +253,13 @@ def today_chart():
     data3 = []
 
     for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == 1:
+        if row[2] == sensor_list[0]:
             legend1 = str(row[3])
             data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == 2:
+        if row[2] == sensor_list[1]:
             legend2 = str(row[3])
             data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == 5:
+        if row[2] == sensor_list[2]:
             legend3 = str(row[3])
             data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
     
@@ -325,14 +310,7 @@ def weekoverview_chart():
         db_conn.close()
         return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
 
-    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
-               WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
-               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
-               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
-               GROUP BY temp_sensor_db_id"""
-
-    no_of_sensors, sensor_list = get_no_of_sensors_from_db_query(cursor, query)
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
 
     if no_of_sensors == 0:
         return("<html><h1>No temperature data for today yet!</h1></html>")
@@ -455,14 +433,22 @@ def run_query_and_dump_out_overview(db_cursor, query, description):
     return all_data
 
 
-def get_no_of_sensors_from_db_query(db_cursor, query_to_run):
-    db_cursor.execute(query_to_run)
+def get_no_of_sensors_and_sensor_id_in_db(db_cursor):
+    
+    query = """SELECT temp_sensor_db_id FROM temps.TEMP_READINGS 
+           WHERE 
+           DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+           AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+           AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())
+           GROUP BY temp_sensor_db_id"""
+               
+    db_cursor.execute(query)
     no_of_sensors = db_cursor.rowcount
 
     sensor_ids = []
     for row in db_cursor.fetchall():
         sensor_ids.append(row[0])
-
+    print(sensor_ids)
     return no_of_sensors, sensor_ids
 
 

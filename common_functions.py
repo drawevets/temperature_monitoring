@@ -10,7 +10,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.80  Last updated: 02/02/19")
+    return ("v0.81  Last updated: 02/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -98,7 +98,7 @@ def find_temp_sensor_pos(caller, sensor_id):
     return None
 
 
-def find_temp_sensor_id_and_offset(caller, db_conn, db_cursor, sensor_id, update_conn_status):
+def find_temp_sensor_id_alias_and_offset(caller, db_conn, db_cursor, sensor_id, update_conn_status):
     write_to_log(caller, "cf: >> find_temp_sensor_id_and_offset()")
     query = "SELECT * FROM temps.TEMP_SENSORS WHERE temp_sensor_id = '" + sensor_id + "'"
     db_cursor.execute(query)
@@ -111,7 +111,7 @@ def find_temp_sensor_id_and_offset(caller, db_conn, db_cursor, sensor_id, update
         temp_sensor_id = str(row[2])
         temp_sensor_alias = row[3]
         temp_offset = row[4]
-        write_to_log(caller, "cf:   Sensor info from DB: " + id + " " + date + " " + temp_sensor_id + " " + str(temp_offset))
+        write_to_log(caller, "cf:   Sensor info from DB: " + id + " " + date + " " + temp_sensor_alias + " " + temp_sensor_id + " " + str(temp_offset))
         if update_conn_status is True:
             try:
                 update_sql = "UPDATE temps.TEMP_SENSORS SET connected = 1 WHERE temp_sensor_id='" + temp_sensor_id + "'"
@@ -126,7 +126,7 @@ def find_temp_sensor_id_and_offset(caller, db_conn, db_cursor, sensor_id, update
     if id is None:
         write_to_log(caller, "cf:***Sensor info not found in DB***")
     write_to_log(caller, "cf: << find_temp_sensor_id_and_offset()")
-    return id, temp_offset
+    return id, temp_sensor_alias, temp_offset
 
 
 def get_all_connected_sensor_ids(caller, db_cursor):
@@ -146,7 +146,8 @@ def get_all_connected_sensor_ids(caller, db_cursor):
 
 def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
     write_to_log(caller, "cf: >> get_last_temperature_reading_from_db()")
-    query = """SELECT CONCAT(DAY(TEMP_READINGS.date_added), '/',MONTH(TEMP_READINGS.date_added), '/',YEAR(TEMP_READINGS.date_added),' ',HOUR(TEMP_READINGS.date_added),':',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+    query = """SELECT CONCAT(DAY(TEMP_READINGS.date_added), '/',MONTH(TEMP_READINGS.date_added), '/',YEAR(TEMP_READINGS.date_added),' ',
+                             LPAD(HOUR(TEMP_READINGS.date_added),2,'0'),':',LPAD(MINUTE(TEMP_READINGS.date_added),2,'0')) as time_added, 
                       temperature, 
                       TEMP_SENSORS.temp_sensor_alias,
                       TEMP_SENSORS.temp_sensor_id

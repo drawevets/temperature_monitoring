@@ -127,13 +127,14 @@ def create_sensors_table(db_conn, db_cursor):
              VALUES (NOW(), '28-020691770d70', 'Ambient 0d70', 0, 0), 
              (NOW(), '28-020b917749e4', 'Monitor 49e4', -0.7, 0), 
              (NOW(), '28-02069177144d', 'Wired 144d', -0.8, 0), 
-             (NOW(), '28-0118679408ff', 'Bare 08ff', -0.4, 0), 
+             (NOW(), '28-0118679408ff', 'Bare 08ff', -0.7, 0), 
              (NOW(), '28-020a9177f3c4', 'Raspberry PI f3c4', -1.1, 0), 
-             (NOW(), '28-020891777a83', 'Wired 7a83', -0.7, 0)"""
+             (NOW(), '28-020891777a83', 'Wired 7a83', -0.7, 0),
+             (NOW(), '28-0118677269ff', 'Bare 09ff', -0.9, 0)"""
     try:
         db_cursor.execute(sql)
         db_conn.commit()
-        cfuncs.write_to_log(lg, "   TEMP_SENSORS table updated OK")
+        cfuncs.write_to_log(lg, "   TEMP_SENSORS table created and updated OK")
     except:
         db_conn.rollback()
         cfuncs.write_to_log(lg, "   TEMP_SENSORS table update failed!!")
@@ -431,7 +432,7 @@ def do_main():
             expected_sensor_count(False)
                    
         for sensor_name in all_sensors_list:
-            db_sensor_id, offset = cfuncs.find_temp_sensor_id_and_offset(lg, db_conn, cursor, sensor_name, True)      
+            db_sensor_id, alias, offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_name, True)      
             cfuncs.write_to_log(lg, "   DB Sensor ID: " + str(db_sensor_id) + "   Temp Offset: " + str(offset))
             safe_to_unplug(False)
             if db_sensor_id is not None:
