@@ -1,0 +1,339 @@
+{% extends "layout.html" %}
+{% block content %}
+    <script src='static/Chart.min.js'></script>
+    <!-- chart canvas element -->
+    <canvas id="Temps_Chart1" width="1200" height="550"></canvas>
+
+    <script>
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+        Chart.defaults.global.responsive = true;
+        Chart.defaults.global.animation.duration = 2000;
+
+        // get chart canvas
+        var ctx1 = document.getElementById("Temps_Chart1").getContext("2d");
+        // create the chart using the chart canvas
+        var myChart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels : [{% for label in date_labels1 %}
+                              "{{label}}",
+                          {% endfor %}],
+                datasets : [{
+                    label: 'Min',
+                    backgroundColor: "#3e95cd",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ mins1 }}
+                },
+                {
+                    label: 'Avg',
+                    type: "line",
+                    borderColor: "#3cba9f",
+                    borderWidth: 4,
+                    fill: false,
+                    data: {{ avgs1 }}
+                },
+                {
+                    label: 'Max',
+                    backgroundColor: "#c45850",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ maxs1 }}
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    position: 'top',
+                    fontSize: 36,
+                    fontStyle: 'normal',
+                    fontColor: '#020370',
+                    padding: 10,
+                    text: '{{chart_title1}}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    padding: 15,
+                    labels: {
+                        fontSize: 14,
+                        fontColor: 'rgb(30, 30, 30)',
+                        padding: 20,
+                        boxWidth: 20
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        bottom: 30
+                    }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            //suggestedMin: 5,
+                            //suggestedMax: 20,
+                            stepSize: 1,
+                            fontSize: 13,
+                            fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 14,
+                            fontStyle: 'normal',
+                            labelString: 'Temperature DegC'
+                        },
+                        gridLines: {
+                            tickMarkLength: 5,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                                fontSize: 12,
+                                fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 13,
+                            fontStyle: 'normal',
+                            labelString: 'Date'
+                        },
+                        gridLines: {
+                            display: false,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                        },
+                    }]
+                }
+            }
+        //showLine: true
+        });
+    </script>
+    <canvas id="Temps_Chart2" width="1200" height="550"></canvas>
+
+    <script>
+        // Global parameters:
+
+        // get chart canvas
+        var ctx2 = document.getElementById("Temps_Chart2").getContext("2d");
+        // create the chart using the chart canvas
+        var myChart2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels : [{% for label in date_labels2 %}
+                              "{{label}}",
+                          {% endfor %}],
+                datasets : [{
+                    label: 'Min',
+                    backgroundColor: "#3e95cd",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ mins2 }}
+                },
+                {
+                    label: 'Avg',
+                    type: "line",
+                    borderColor: "#3cba9f",
+                    borderWidth: 4,
+                    fill: false,
+                    data: {{ avgs2 }}
+                },
+                {
+                    label: 'Max',
+                    backgroundColor: "#c45850",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ maxs2 }}
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    position: 'top',
+                    fontSize: 36,
+                    fontStyle: 'normal',
+                    fontColor: '#020370',
+                    padding: 10,
+                    text: '{{chart_title2}}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    padding: 15,
+                    labels: {
+                        fontSize: 14,
+                        fontColor: 'rgb(30, 30, 30)',
+                        padding: 20,
+                        boxWidth: 20
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        bottom: 30
+                    }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            //suggestedMin: 5,
+                            //suggestedMax: 10,
+                            stepSize: 1,
+                            fontSize: 13,
+                            fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 14,
+                            fontStyle: 'normal',
+                            labelString: 'Temperature DegC'
+                        },
+                        gridLines: {
+                            tickMarkLength: 5,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                                fontSize: 12,
+                                fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 13,
+                            fontStyle: 'normal',
+                            labelString: 'Date'
+                        },
+                        gridLines: {
+                            display: false,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                        },
+                    }]
+                }
+            }
+        //showLine: true
+        });
+    </script>
+    <canvas id="Temps_Chart3" width="1200" height="550"></canvas>
+
+    <script>
+        // Global parameters:
+        // do not resize the chart canvas when its container does (keep at 600x400px)
+
+        // get chart canvas
+        var ctx3 = document.getElementById("Temps_Chart3").getContext("2d");
+        // create the chart using the chart canvas
+        var myChart3 = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels : [{% for label in date_labels3 %}
+                              "{{label}}",
+                          {% endfor %}],
+                datasets : [{
+                    label: 'Min',
+                    backgroundColor: "#3e95cd",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ mins3 }}
+                },
+                {
+                    label: 'Avg',
+                    type: "line",
+                    borderColor: "#3cba9f",
+                    borderWidth: 4,
+                    fill: false,
+                    data: {{ avgs3 }}
+                },
+                {
+                    label: 'Max',
+                    backgroundColor: "#c45850",
+                    borderColor: "#000",
+                    borderWidth: 2,
+                    data: {{ maxs3 }}
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    position: 'top',
+                    fontSize: 36,
+                    fontStyle: 'normal',
+                    fontColor: '#020370',
+                    padding: 10,
+                    text: '{{chart_title3}}'
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    padding: 15,
+                    labels: {
+                        fontSize: 14,
+                        fontColor: 'rgb(30, 30, 30)',
+                        padding: 20,
+                        boxWidth: 20
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        bottom: 10
+                    }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: false,
+                            //suggestedMin: 5,
+                            //suggestedMax: 10,
+                            stepSize: 1,
+                            fontSize: 13,
+                            fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 14,
+                            fontStyle: 'normal',
+                            labelString: 'Temperature DegC'
+                        },
+                        gridLines: {
+                            tickMarkLength: 5,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                                fontSize: 12,
+                                fontStyle: 'normal'
+                        },
+                        scaleLabel: {
+                            display: true,
+                            fontSize: 13,
+                            fontStyle: 'normal',
+                            labelString: 'Date'
+                        },
+                        gridLines: {
+                            display: false,
+                            //zeroLineWidth: 1,
+                            zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                        },
+                    }]
+                }
+            }
+        //showLine: true
+        });
+    </script>
+{% endblock content %}

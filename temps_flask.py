@@ -6,6 +6,8 @@ import MySQLdb
 import glob
 from flask import Flask
 from flask import render_template
+import os
+from pathlib import Path
 import socket
 import subprocess
 
@@ -452,6 +454,24 @@ def get_no_of_sensors_and_sensor_id_in_db(db_cursor):
     return no_of_sensors, sensor_ids
 
 
+def clean_old_log_file():
+    print("clean_old_log_file")
+    now = datetime.datetime.now()
+    log_date = str(now.day) + str(now.month).zfill(2) + str(now.year) + "_" + str(now.hour).zfill(2) + str(now.minute).zfill(2)
+    logs_dir = Path("/home/steve/temperature_monitoring/logs")
+    log_file = Path("/home/steve/temperature_monitoring/weblog.txt")
+    if log_file.is_file():   
+        # log file exists
+        os.system("gzip -q weblog.txt")
+        if logs_dir.is_dir():
+            #print("found logs dir")
+            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
+        else:
+            #print("making logs dir")
+            os.system("mkdir logs")
+            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
+
 if __name__ == '__main__':
+    clean_old_log_file()
     app.run(host='0.0.0.0', port=80, debug=True)
     
