@@ -113,8 +113,23 @@ def status():
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
+    os, architecture, oskernel, firmwareversion = cfuncs.get_system_information()
     
-    return render_template('status.html', version=vstring, page_heading='System Status', title='Status', hostname = socket.gethostname(), ip = ip_address, ssid=ssid, quality=str(quality), level=str(level), no_sensors=no_sensors, sensors_list=all_sensors_list)
+    return render_template('status.html',
+                            version=vstring,
+                            page_heading='System Status',
+                            title='Status',
+                            os = os, 
+                            architecture = architecture,
+                            oskernel = oskernel,
+                            firmwareversion = firmwareversion,
+                            hostname = socket.gethostname(),
+                            ip = ip_address,
+                            ssid=ssid,
+                            quality=str(quality),
+                            level=str(level),
+                            no_sensors=no_sensors,
+                            sensors_list=all_sensors_list)
 
 
 @app.route("/twentyfourhour_chart")
@@ -449,7 +464,6 @@ def get_no_of_sensors_and_sensor_id_in_db(db_cursor):
 
 
 def clean_old_log_file():
-    print("clean_old_log_file")
     now = datetime.datetime.now()
     log_date = str(now.day) + str(now.month).zfill(2) + str(now.year) + "_" + str(now.hour).zfill(2) + str(now.minute).zfill(2)
     logs_dir = Path("/home/steve/temperature_monitoring/logs")

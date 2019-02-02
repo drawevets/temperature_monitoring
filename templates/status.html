@@ -2,8 +2,36 @@
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="col-md5">
-            <h3>Wireless Network Status:</h3>
+        <div class="col-md8">
+            <h3>Platform Information</h3>
+            <table class="table table-bordered table-sm">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Platform Attribute</th>
+                        <th>Version</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Operating System</td>
+                        <td>{{ os }}</td>
+                    </tr>
+                    <tr>
+                        <td>Chipset Architecture</td>
+                        <td>{{ architecture }}</td>
+                    </tr>
+                    <tr>
+                        <td>OS Kernel Version</td>
+                        <td>{{ oskernel }}</td>
+                    </tr>
+                    <tr>
+                        <td>Firmware Version</td>
+                        <td>{{ firmwareversion }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            </br>
+            <h3>Wireless Network Status</h3>
             <table class="table table-bordered table-sm">
                 <thead class="thead-light">
                     <tr>
@@ -36,7 +64,7 @@
             </table>
             </br>
             {% if sensors_list %}
-                <h3>Temperature sensors connected:</h3>
+                <h3>Temperature sensors connected</h3>
                 <table class="table table-bordered table-sm">
                     <thead class="thead-light">
                         <tr>

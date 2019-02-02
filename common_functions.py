@@ -3,6 +3,8 @@
 import datetime
 import glob
 import MySQLdb
+import platform
+
 import subprocess
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
@@ -10,7 +12,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.86 - Last updated: 02/02/19")
+    return ("v0.87 - Last updated: 02/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -186,6 +188,17 @@ def get_local_ip_address(caller):
     write_to_log(caller, "cf: << get_local_ip_address()")
     return ip_address
 
+
+def get_system_information():
+    os = platform.system()
+    architecture = platform.machine()
+    oskernel = platform.platform()
+    firmwareversion = platform.version()
+    print("OS: " + os)
+    print("Architecture: " + architecture)
+    print("OS Kernel: " + oskernel)
+    print("Firmware version: " + firmwareversion)
+    return os, architecture, oskernel, firmwareversion
 
 def read_temp(caller, sensor_id):
     write_to_log(caller, "cf: >> read_temp(" + sensor_id + ")")
