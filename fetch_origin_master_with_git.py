@@ -43,5 +43,5 @@ if __name__ == "__main__":
         print("Resetting code...")
         resetCheck = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "reset", "--hard", "origin/master")
         print(str(resetCheck))
-        print("Check complete")
-        os.system("shutdown -r 1")
+        print("Check complete.....reseting now....")
+        os.system("/sbin/shutdown -r 0")
