@@ -51,22 +51,21 @@ Add / uncomment as appropriate:
 #Reload bash settings to enable
 source .bashrc
 
+
 ##########################################################################################################
 #Update All Pi Software and get required packages
 ##########################################################################################################
 
 sudo apt-get update ; sudo apt-get upgrade
 
-sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools
+sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools rpi.gpio
 
 
 ##########################################################################################################
 #Python Extensions setup
 ##########################################################################################################
 
-sudo pip3 install flask sh
-sudo pip3 install sh
-
+sudo pip3 install flask mysqlclient
 
 sudo git clone https://github.com/drawevets/temperature_monitoring
 
@@ -74,6 +73,13 @@ sudo git clone https://github.com/drawevets/temperature_monitoring
 ##########################################################################################################
 #Database Setup, User setup
 ##########################################################################################################
+
+#Set new mysql root password
+sudo mysqladmin -u root password <new password here>
+
+#Login to mysql
+sudo mysql -uroot -p
+
 
 CREATE DATABASE temps;
 CREATE USER 'temps_user'@'localhost' IDENTIFIED BY 'user';
@@ -84,6 +90,29 @@ GRANT SELECT, INSERT, UPDATE, CREATE ON temps.* TO 'temps_user'@'localhost' iden
 GRANT SELECT ON temps.* TO 'temps_reader'@'localhost' identified by 'reader';
 GRANT SELECT, INSERT, UPDATE, CREATE, DROP ON temps.* TO 'temps_admin'@'localhost' identified by 'admin';
 COMMIT;
+
+
+
+##########################################################################################################
+Test Apps
+##########################################################################################################
+
+sudo ./temp_manage_reading.py
+
+Then:
+sudo ./temps_flask.py
+
+
+##########################################################################################################
+#Updates to /etc/rc.local
+##########################################################################################################
+
+sudo vi /etc/rc.local
+
+Add:
+sudo  ./home/steve/temperature_monitoring/start_temp_monitoring.sh
+
+#Reboot
 
 
 ##########################################################################################################
@@ -98,12 +127,6 @@ export EMAIL_PASSWORD = ""
 Recipeient of the emails:
 export RECIPIENT_EMAIL = ""
 
-##########################################################################################################
-#Updates to /etc/rc.local
-##########################################################################################################
-Add:
-
-sudo ./home/steve/temperature_monitoring/start_temp_monitoring.sh
 
 ##########################################################################################################
 #Updates to su cron for auto update checking
@@ -114,10 +137,6 @@ sudo crontab -e
 To check every day of month at 00:00, add:
 # m h  dom mon dow    Command
   0 0  */1  *   *     ./home/steve/temperature_monitoring/run_git_fetch.sh
-
-
-
-
 
 ##########################################################################################################
 #                                     U s e f u l   S t u f f                                            # 

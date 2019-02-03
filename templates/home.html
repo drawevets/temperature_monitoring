@@ -4,6 +4,7 @@
     <div class="row">
         <div class="col-md7">
             <div class="current_temps">
+                {% if temp_data %}
                 <table class="table table-bordered text-centered">
                     <thead class="thead-light">
                         <tr>
@@ -14,19 +15,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if temp_data %}
-                            {% for sensor_name, sensor_id, time, temp  in temp_data %}
-                                <tr>
-                                    <td> {{ time }} </td>
-                                    <td> {{ sensor_name }} </td>
-                                    <td> {{ sensor_id }} </td>
-                                    <td> {{ temp }} </td>
-                                </tr>
-                            {% endfor%}
-                        {% endif %}
+                        {% for sensor_name, sensor_id, time, temp  in temp_data %}
+                            <tr>
+                                <td> {{ time }} </td>
+                                <td> {{ sensor_name }} </td>
+                                <td> {{ sensor_id }} </td>
+                                <td> {{ temp }} </td>
+                            </tr>
+                        {% endfor%}
                     </tbody>
                     </br>
                 </table>
+                {% else %}
+                    </br><h3>No sensors currently connected</br>
+                    </br>                      or</br>
+                    </br>The system has recently been restarted, please try again......</h3>
+                {% endif %}
             </div>
         </div>
     </div>

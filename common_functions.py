@@ -12,7 +12,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.89 - Last updated: 03/02/19")
+    return ("v0.90 - Last updated: 03/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -136,7 +136,7 @@ def get_all_connected_sensor_ids(caller, db_cursor):
     query = "SELECT sensor_id FROM temps.TEMP_SENSORS WHERE connected = '1'"
     db_cursor.execute(query)
     sensor_ids = []
-    write_to_log(caller, "   Sensors currently coonnected:")
+    write_to_log(caller, "   Sensors currently connected:")
     for row in db_cursor.fetchall():
         write_to_log(caller, str(row[0]))
         sensor_ids.append(str(row[0]))
@@ -148,7 +148,7 @@ def get_all_connected_sensor_ids(caller, db_cursor):
 
 def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
     write_to_log(caller, "cf: >> get_last_temperature_reading_from_db()")
-    query = """SELECT CONCAT(DAY(TEMP_READINGS.date_added), '/',MONTH(TEMP_READINGS.date_added), '/',YEAR(TEMP_READINGS.date_added),' ',
+    query = """SELECT CONCAT(LPAD(DAY(TEMP_READINGS.date_added),2,'0'), '/',LPAD(MONTH(TEMP_READINGS.date_added),2,'0'), '/',YEAR(TEMP_READINGS.date_added),' ',
                              LPAD(HOUR(TEMP_READINGS.date_added),2,'0'),':',LPAD(MINUTE(TEMP_READINGS.date_added),2,'0')) as time_added, 
                       temperature, 
                       TEMP_SENSORS.temp_sensor_alias,

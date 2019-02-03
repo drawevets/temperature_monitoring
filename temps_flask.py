@@ -26,39 +26,37 @@ app = Flask(__name__)
 def home():
     vstring = cfuncs.app_version()
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
-#                                         Log     Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    if all_sensors_list is not None:
+    #                                         Log     Location   DB Name    DB Username   DB Passwd 
+        db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
 
-    if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        if db_conn is None:
+            return("<html><h1>DB connection failed!</h1></html>")
 
-    cursor = db_conn.cursor()
-    
-    sensors_connected = cfuncs.get_all_connected_sensor_ids("web", cursor)
-    
-    reading_dates = []
-    temperatures = []
-    temp_sensor_aliass = []
-    temp_sensor_ids = []
-    
-    for sensor_id in sensors_connected:
-        reading_date, temperature, temp_sensor_alias, temp_sensor_id = cfuncs.get_last_temperature_reading_from_db("web", cursor, sensor_id)
-        reading_dates.append(reading_date)
-        temperatures.append(temperature)
-        temp_sensor_aliass.append(temp_sensor_alias)
-        temp_sensor_ids.append(temp_sensor_id)
-    
-    temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
-    
-    #print(temp_details)
+        cursor = db_conn.cursor()
+        
+        sensors_connected = cfuncs.get_all_connected_sensor_ids("web", cursor)
+        
+        reading_dates = []
+        temperatures = []
+        temp_sensor_aliass = []
+        temp_sensor_ids = []
+        
+        for sensor_id in sensors_connected:
+            reading_date, temperature, temp_sensor_alias, temp_sensor_id = cfuncs.get_last_temperature_reading_from_db("web", cursor, sensor_id)
+            reading_dates.append(reading_date)
+            temperatures.append(temperature)
+            temp_sensor_aliass.append(temp_sensor_alias)
+            temp_sensor_ids.append(temp_sensor_id)
+        
+        temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
     
     return render_template('home.html', version = vstring,
-                                        page_heading = 'Last Recorded Temperature Readings', 
+                                        page_heading = 'Last Saved Temperature Readings', 
                                         title = 'Last Recorded', 
                                         temp_data = temp_details)     
 
 
-@app.route("/")
 @app.route("/current_temps")
 def current_temps():
     vstring = cfuncs.app_version()
@@ -649,17 +647,6 @@ def weekoverview_chart():
                            mins3 = all_min_temps[2],
                            avgs3 = all_avg_temps[2],
                            maxs3 = all_max_temps[2])
-
-
-def dump_all_db_data_out(db_cursor):
-    query = "SELECT * FROM test.TEMP_READINGS"
-    db_cursor.execute(query)
-
-    for row in db_cursor.fetchall():
-        id = str(row[0])
-        date = str(row[1])
-        temp = str(row[2])
-        print(id + " " + date + " " + temp)
 
 
 def run_query_and_dump_all_db_data_out(db_cursor, query, description):

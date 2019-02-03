@@ -209,7 +209,7 @@ def check_for_settings_for_defaults_and_updates(db_conn, db_cursor):
     settings = [('sensor_polling_freq', '300'),
                 ('write_to_logfile', 'true'),
                 ('start_up_status_email', 'false'),
-                ('first_read_settle_time', '30'),
+                ('first_read_settle_time', '15'),
                 ('email_recipient_addr', 'moc.liamg@draws.rednef')]
     
     no_of_settings = len(settings)
