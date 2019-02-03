@@ -136,7 +136,13 @@ sudo crontab -e
 
 To check every day of month at 00:00, add:
 # m h  dom mon dow    Command
-  0 0  */1  *   *     ./home/steve/temperature_monitoring/run_git_fetch.sh
+  0 0  */1  *   *     /bin/bash /home/steve/temperature_monitoring/run_git_fetch.sh
+
+Every 2 minutes
+# m h  dom mon dow   command:
+ */2 *  *    *   *    /bin/bash /home/steve/temperature_monitoring/run_git_fetch.sh
+
+
 
 ##########################################################################################################
 #                                     U s e f u l   S t u f f                                            # 
