@@ -1,22 +1,74 @@
+Login to a new Raspbian Stretch Lite build
+
+Login: pi
+Passwd: raspberry
+
+# Add new user
+sudo adduser steve
+
+# Add new user to sudo privileges
+sudo visudo
+
+# add under root
+steve  ALL=(ALL) ALL
+
+#Logout
+
+#Login as new User: steve
+
+sudo deluser pi     
+     or
+sudo -remove-home pi
+
+#Load Raspberry Pi Config App
+sudo raspi-config
+
+#Update tool first
+
+#Network Options
+Change the Hostname to 'temps'
+Change the Country, SSID and Password as appropriate for network
+
+#Localisation Options
+No changes should be necessary for UK
+
+#Interfacing Options
+Enable SSH
+Enable 1-Wire
+
+#Finish Reboot
+
+#Login as new user: steve
+
+#Check Wifi working etc....
+
+#Edit .bashrc file
+Add / uncomment as appropriate:
+
+  alias ll='ls -l'
+  alias h='history'
+
+#Reload bash settings to enable
+source .bashrc
 
 ##########################################################################################################
 #Update All Pi Software and get required packages
 ##########################################################################################################
 
-sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get update ; sudo apt-get upgrade
 
-sudo apt-get install mysql git
-
-git clone https://github.com/drawevets/temperature_monitoring
+sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools
 
 
 ##########################################################################################################
 #Python Extensions setup
 ##########################################################################################################
 
-sudo pip3 install flask
+sudo pip3 install flask sh
 sudo pip3 install sh
+
+
+sudo git clone https://github.com/drawevets/temperature_monitoring
 
 
 ##########################################################################################################

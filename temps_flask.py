@@ -133,6 +133,258 @@ def status():
                             sensors_list=all_sensors_list)
 
 
+@app.route("/onehour_chart")
+def onehour_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
+                             MONTH(TEMP_READINGS.date_added),',',
+                             DAY(TEMP_READINGS.date_added),',',
+                             HOUR(TEMP_READINGS.date_added),',',
+                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 HOUR)
+               ORDER BY TEMP_READINGS.date_added ASC"""
+
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data1 = []
+    data2 = []
+    data3 = []
+
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+        if row[2] == sensor_list[0]:
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[1]:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[2]:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+    
+    cursor.close()
+    db_conn.close()
+    vstring = cfuncs.app_version()
+    
+    fourhoursbefore = datetime.datetime.now() - datetime.timedelta(hours=1)
+    now = datetime.datetime.now()
+    xaxis_info = []
+    xaxis_info.append("new Date(" + str(fourhoursbefore.year) + "," + str(fourhoursbefore.month) + "," + str(fourhoursbefore.day) + "," + str(fourhoursbefore.hour) + "," + str(fourhoursbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
+    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    
+    page_title = '1hr Temps'
+    chart_title = 'Temperature Readings for the previous hour'
+    return render_template('time_line_chart.html',
+                           version = vstring,
+                           page_heading = '',
+                           title = page_title,
+                           temps1 = str(data1).replace('\'', ''), 
+                           temps2 = str(data2).replace('\'', ''), 
+                           temps3 = str(data3).replace('\'', ''), 
+                           series1 = legend1, 
+                           series2 = legend2, 
+                           series3 = legend3,
+                           chart_title = chart_title,
+                           xaxis = xaxis_info)
+
+
+@app.route("/fourhour_chart")
+def fourhour_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
+                             MONTH(TEMP_READINGS.date_added),',',
+                             DAY(TEMP_READINGS.date_added),',',
+                             HOUR(TEMP_READINGS.date_added),',',
+                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 4 HOUR)
+               ORDER BY TEMP_READINGS.date_added ASC"""
+
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data1 = []
+    data2 = []
+    data3 = []
+
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+        if row[2] == sensor_list[0]:
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[1]:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[2]:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+    
+    cursor.close()
+    db_conn.close()
+    vstring = cfuncs.app_version()
+    
+    fourhoursbefore = datetime.datetime.now() - datetime.timedelta(hours=4)
+    now = datetime.datetime.now()
+    xaxis_info = []
+    xaxis_info.append("new Date(" + str(fourhoursbefore.year) + "," + str(fourhoursbefore.month) + "," + str(fourhoursbefore.day) + "," + str(fourhoursbefore.hour) + "," + str(fourhoursbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
+    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    
+    page_title = '4hr Temps'
+    chart_title = 'Temperature Readings for the previous 4 hours'
+    return render_template('time_line_chart.html',
+                           version = vstring,
+                           page_heading = '',
+                           title = page_title,
+                           temps1 = str(data1).replace('\'', ''), 
+                           temps2 = str(data2).replace('\'', ''), 
+                           temps3 = str(data3).replace('\'', ''), 
+                           series1 = legend1, 
+                           series2 = legend2, 
+                           series3 = legend3,
+                           chart_title = chart_title,
+                           xaxis = xaxis_info)
+
+
+@app.route("/today_chart")
+def today_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',MONTH(TEMP_READINGS.date_added),',',DAY(TEMP_READINGS.date_added),',',HOUR(TEMP_READINGS.date_added),',',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE 
+               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
+               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
+               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
+    
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data1 = []
+    data2 = []
+    data3 = []
+
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+        if row[2] == sensor_list[0]:
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[1]:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[2]:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+    
+    #formatted_data = str(data1).replace('\'', '')
+    #print(formatted_data)
+    #print(data1)
+    
+    cursor.close()
+    db_conn.close()
+    vstring = cfuncs.app_version()
+    
+    now = datetime.datetime.now()
+    xaxis_info = []
+    # X Axis to start at 00:00 and end at 24:00 of the same day i.e. the current day!
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",0,0)")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",23,59)")
+    
+    page_title = 'Todays Temps'
+    chart_title = 'Temperature Readings for Today Only'
+    return render_template('time_line_chart.html',
+                           version=vstring,
+                           page_heading = '',
+                           title=page_title,
+                           temps1=str(data1).replace('\'', ''), 
+                           temps2=str(data2).replace('\'', ''), 
+                           temps3=str(data3).replace('\'', ''), 
+                           series1=legend1, 
+                           series2=legend2, 
+                           series3=legend3,
+                           chart_title=chart_title,
+                           xaxis = xaxis_info)
+
+
 @app.route("/twentyfourhour_chart")
 def twentyfourhour_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
@@ -221,8 +473,8 @@ def twentyfourhour_chart():
                            xaxis = xaxis_info)
 
 
-@app.route("/today_chart")
-def today_chart():
+@app.route("/week_chart")
+def week_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
     db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
 
@@ -245,17 +497,19 @@ def today_chart():
     if no_of_sensors != 3:
         return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
     
-    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',MONTH(TEMP_READINGS.date_added),',',DAY(TEMP_READINGS.date_added),',',HOUR(TEMP_READINGS.date_added),',',MINUTE(TEMP_READINGS.date_added)) as time_added, 
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
+                             MONTH(TEMP_READINGS.date_added),',',
+                             DAY(TEMP_READINGS.date_added),',',
+                             HOUR(TEMP_READINGS.date_added),',',
+                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
                       temperature, 
                       temp_sensor_db_id, 
                       temp_sensor_alias 
                FROM temps.TEMP_READINGS 
                JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE 
-               DAYOFMONTH(TEMP_READINGS.date_added) = DAYOFMONTH(NOW())
-               AND MONTH(TEMP_READINGS.date_added) = MONTH(NOW()) 
-               AND YEAR(TEMP_READINGS.date_added) = YEAR(NOW())"""
-    
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 WEEK)
+               ORDER BY TEMP_READINGS.date_added ASC"""
+
     cursor.execute(query)
 
     date = []
@@ -283,25 +537,28 @@ def today_chart():
     db_conn.close()
     vstring = cfuncs.app_version()
     
+    sevendaysbefore = datetime.datetime.now() - datetime.timedelta(days=7)
     now = datetime.datetime.now()
     xaxis_info = []
-    # X Axis to start at 00:00 and end at 24:00 of the same day i.e. the current day!
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",0,0)")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + ",23,59)")
+    xaxis_info.append("new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
+    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
     
-    page_title = 'Todays Temps'
-    chart_title = 'Temperature Readings for Today Only'
+    page_title = 'Week Temps'
+    chart_title = 'Temperature Readings for the previous week'
     return render_template('time_line_chart.html',
-                           version=vstring,
+                           version = vstring,
                            page_heading = '',
-                           title=page_title,
-                           temps1=str(data1).replace('\'', ''), 
-                           temps2=str(data2).replace('\'', ''), 
-                           temps3=str(data3).replace('\'', ''), 
-                           series1=legend1, 
-                           series2=legend2, 
-                           series3=legend3,
-                           chart_title=chart_title,
+                           title = page_title,
+                           show_date_only = True,
+                           temps1 = str(data1).replace('\'', ''), 
+                           temps2 = str(data2).replace('\'', ''), 
+                           temps3 = str(data3).replace('\'', ''), 
+                           series1 = legend1, 
+                           series2 = legend2, 
+                           series3 = legend3,
+                           chart_title = chart_title,
                            xaxis = xaxis_info)
 
 
@@ -371,10 +628,10 @@ def weekoverview_chart():
     cursor.close()
     db_conn.close()
         
-    page_title = 'Weekly Overview'
-    chart_title1 = 'Weekly overview of Temperatures (' + all_sensor_aliases[0] + ')'
-    chart_title2 = 'Weekly overview of Temperatures (' + all_sensor_aliases[1] + ')'
-    chart_title3 = 'Weekly overview of Temperatures (' + all_sensor_aliases[2] + ')'
+    page_title = 'Daily Stats'
+    chart_title1 = 'Daily Overview of Temperatures (' + all_sensor_aliases[0] + ')'
+    chart_title2 = 'Daily Overview of Temperatures (' + all_sensor_aliases[1] + ')'
+    chart_title3 = 'Daily Overview of Temperatures (' + all_sensor_aliases[2] + ')'
     return render_template('weekoverview_chart.html',
                            version=cfuncs.app_version(), title=page_title,
                            chart_title1=chart_title1,
@@ -460,7 +717,7 @@ def get_no_of_sensors_and_sensor_id_in_db(db_cursor):
     sensor_ids = []
     for row in db_cursor.fetchall():
         sensor_ids.append(row[0])
-    print(sensor_ids)
+    #print(sensor_ids)
     return no_of_sensors, sensor_ids
 
 
@@ -479,6 +736,7 @@ def clean_old_log_file():
             #print("making logs dir")
             os.system("mkdir logs")
             os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
+
 
 if __name__ == '__main__':
     clean_old_log_file()
