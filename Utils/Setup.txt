@@ -92,6 +92,18 @@ GRANT SELECT, INSERT, UPDATE, CREATE, DROP ON temps.* TO 'temps_admin'@'localhos
 COMMIT;
 
 
+##########################################################################################################
+Setup Environment Variables for email sending
+##########################################################################################################
+sudo vi /etc/environment
+
+Add:
+
+EMAIL_SENDING_ACCOUNT="raspberrypi.sender1972@gmail.com"
+EMAIL_SENDING_PASSWORD="Raspberry4P!"
+RECIPIENT_EMAIL_ADDR="fender.sward@gmail.com"
+
+
 
 ##########################################################################################################
 Test Apps
@@ -110,13 +122,13 @@ sudo ./temps_flask.py
 sudo vi /etc/rc.local
 
 Add:
-sudo  ./home/steve/temperature_monitoring/start_temp_monitoring.sh
+/bin/bash ./home/steve/temperature_monitoring/start_temp_monitoring.sh
 
 #Reboot
 
 
 ##########################################################################################################
-#Updates to ??????? eventually when figured out !!!
+#Add environment var in    /etc/environment  !! still doesn't work!
 ##########################################################################################################
 Add:
 

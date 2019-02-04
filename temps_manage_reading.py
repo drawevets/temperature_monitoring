@@ -27,6 +27,9 @@ log_to_console = True
 
 email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
 email_passwd = "!P4yrrebpsaR"
+#email_user = os.environ.get('EMAIL_SENDING_ACCOUNT')
+#email_passwd = os.environ.get('EMAIL_SENDING_PASSWD')
+#email_recipient_addr = os.environ.get('RECIPIENT_EMAIL_ADDR')
 
 lg = "temps"
 
@@ -206,7 +209,7 @@ def create_settings_table(db_conn, db_cursor):
 def check_for_settings_for_defaults_and_updates(db_conn, db_cursor):
     cfuncs.write_to_log(lg, ">> check_for_settings_for_defaults_and_updates()")
     
-    settings = [('sensor_polling_freq', '300'),
+    settings = [('sensor_polling_freq', '600'),
                 ('write_to_logfile', 'true'),
                 ('start_up_status_email', 'false'),
                 ('first_read_settle_time', '15'),
@@ -404,14 +407,20 @@ def do_main():
 
     send_start_up_status_email = Global_dict['start_up_status_email']
     #Override for start emails!
-    send_start_up_status_email = "false"
-
+    send_start_up_status_email = "true"
+    
+    #if email_user is not None and email_passwd is not None and email_recipient_addr is not None:
     if send_start_up_status_email == "true":
-        send_email(email_user[::-1], email_passwd[::-1], Global_dict['email_recipient_addr'][::-1], 
+        send_email(email_user[::-1], email_passwd[::-1], Global_dict['email_recipient_addr'][::-1],  
                "PI Temperature Monitoring Power Up Status", 
                "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
                "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + "\n\n\nHome page:\nhttp://" + ip_address + 
-               ":5000/home\n                       or\nhttp://" + socket.gethostname() + ".local:5000/home\n\n")
+               "/home\n                       or\nhttp://" + socket.gethostname() + ".local/home\n\n")
+    #else:
+    #    cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
+    #    cfuncs.write_to_log(lg, "Email user: " + str(email_user))
+    #    cfuncs.write_to_log(lg, "Email passwd: " + str(email_passwd))
+    #    cfuncs.write_to_log(lg, "Email recipient: " + str(email_recipient_addr))
     
     settle_time = int(Global_dict['first_read_settle_time'])
     cfuncs.write_to_log(lg, "Waiting %d seconds for the initial readings" % settle_time)
