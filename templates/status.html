@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
+<!-- import plugin script -->
+<script src='static/Chart.min.js'></script>
+
 <div class="container">
     <div class="row">
         <div class="col-md8">
@@ -52,8 +55,48 @@
                         <td>Current Free Space</td>
                         <td>{{ disk_free_space }} GB</td>
                     </tr>
+                    <tr>
+                        <canvas id="myChart" width="300" height="300"></canvas>
+                    </tr>
                 </tbody>
             </table>
+            </br>
+
+            <script>
+                Chart.defaults.global.responsive = false;
+                Chart.defaults.global.animation.duration = 2500;
+                Chart.defaults.pie.animation.animateScale = true;
+
+
+                var ctx = document.getElementById("myChart").getContext('2d');
+                var myChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ["Used", "Free Space"],
+                        datasets: [{
+                            backgroundColor: [
+                            "#e74c3c",
+                            "#2ecc71"
+                            ],
+                            borderWidth: 1,
+                            borderColor: "#202020",
+                            data: [{{ disk_capacity-disk_free_space }}, {{ disk_free_space }}]
+                        }]
+                    },
+                    options : {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                fontSize: 14,
+                                fontColor: 'rgb(30, 30, 30)',
+                                padding: 20,
+                                boxWidth: 20
+                            }
+                        }
+                    }
+                });
+            </script>
             </br>
             <h3>Wireless Network Status</h3>
             <table class="table table-bordered table-sm">

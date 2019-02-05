@@ -73,6 +73,18 @@ sudo git clone https://github.com/drawevets/temperature_monitoring
 
 
 ##########################################################################################################
+Create Email config file
+##########################################################################################################
+# email_config.py
+
+email_details = dict(
+    sender_addr = 'raspberrypi.emailsender1972@gmail.com',
+    sender_passwd = 'xxxxxxxxx',
+    recipient = 'xxxxxxx@gmail.com'
+)
+
+
+##########################################################################################################
 #Database Setup, User setup
 ##########################################################################################################
 
