@@ -451,15 +451,13 @@ def do_main():
         
         net_checking_count = 10
         net_checking_loop_time = (loop_time / net_checking_count)
-        count = 1
-        while count <= net_checking_count:
+        for count in range(0,net_checking_count-1):
             cfuncs.write_to_log(lg, "In network monitor loop(" + str(count) + ") before resampling temps again")
             ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
             if ssid != '':
                 network_status(True)
             else:
                 network_status(False)
-            count += 1
             time.sleep(net_checking_loop_time)
             
         cfuncs.write_to_log(lg, "Exited network monitor loop, one for sleep before resampling temps again")    
