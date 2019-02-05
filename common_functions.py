@@ -3,6 +3,7 @@
 import datetime
 import glob
 import MySQLdb
+import os
 import platform
 
 import subprocess
@@ -145,6 +146,16 @@ def get_all_connected_sensor_ids(caller, db_cursor):
     write_to_log(caller, "cf: << get_all_connected_sensor_ids()")
     return sensor_ids
 
+
+def get_filesystem_stats(caller):
+    write_to_log(caller, "cf: >> get_filesystem_stats()")
+    statvfs = os.statvfs('/')
+    total_capacity = round(statvfs.f_frsize * statvfs.f_blocks / (1024*1024*1024), 3)
+    free_space = round(statvfs.f_frsize * statvfs.f_bfree / (1024*1024*1024), 3)
+    write_to_log(caller, "   Total capacity = " + str(total_capacity) + "   Free space = " + str(free_space))
+    write_to_log(caller, "cf: << get_filesystem_stats()")
+    return total_capacity, free_space
+    
 
 def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
     write_to_log(caller, "cf: >> get_last_temperature_reading_from_db()")

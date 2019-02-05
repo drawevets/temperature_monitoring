@@ -27,10 +27,30 @@
                     <tr>
                         <td>Firmware Version</td>
                         <td>{{ firmwareversion }}</td>
-                    </tr>                    
+                    </tr>
                     <tr>
-                        <td>Up Time</td>
+                        <td>System Up Time</td>
                         <td>{{ uptime }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            </br>
+            <h3>Storage Information</h3>
+            <table class="table table-bordered table-sm">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Disk/SD Card Capacity</td>
+                        <td>{{ disk_capacity }} GB</td>
+                    </tr>
+                    <tr>
+                        <td>Current Free Space</td>
+                        <td>{{ disk_free_space }} GB</td>
                     </tr>
                 </tbody>
             </table>

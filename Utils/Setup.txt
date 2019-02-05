@@ -58,7 +58,9 @@ source .bashrc
 
 sudo apt-get update ; sudo apt-get upgrade
 
-sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools rpi.gpio
+sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools rpi.gpio rpi-update
+
+sudo rpi-update
 
 
 ##########################################################################################################

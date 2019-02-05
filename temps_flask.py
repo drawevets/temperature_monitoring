@@ -112,6 +112,7 @@ def status():
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
     os, architecture, oskernel, firmwareversion, uptime = cfuncs.get_system_information()
+    total_capacity, free_space = cfuncs.get_filesystem_stats(lg)
     
     return render_template('status.html',
                             version=vstring,
@@ -123,6 +124,8 @@ def status():
                             uptime = uptime,
                             firmwareversion = firmwareversion,
                             hostname = socket.gethostname(),
+                            disk_capacity = total_capacity,
+                            disk_free_space = free_space,
                             ip = ip_address,
                             ssid=ssid,
                             quality=str(quality),

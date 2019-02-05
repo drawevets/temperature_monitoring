@@ -1,5 +1,6 @@
 #!/usr/bin/python3.5
 
+import email_config
 import common_functions as cfuncs
 import datetime
 import os
@@ -25,11 +26,9 @@ database_password = "user"
 
 log_to_console = True
 
-email_user = "moc.liamg@2791rednesliame.ipyrrebpsar"
-email_passwd = "!P4yrrebpsaR"
-#email_user = os.environ.get('EMAIL_SENDING_ACCOUNT')
-#email_passwd = os.environ.get('EMAIL_SENDING_PASSWD')
-#email_recipient_addr = os.environ.get('RECIPIENT_EMAIL_ADDR')
+email_user = email_config.email_details['sender_addr']
+email_passwd = email_config.email_details['sender_passwd']
+email_recipient_addr = email_config.email_details['recipient']
 
 lg = "temps"
 
@@ -39,7 +38,6 @@ Global_dict = None
 Global_logfile = None
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
-
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)   #Use GPIO no, NOT pin no
@@ -407,19 +405,18 @@ def do_main():
     send_start_up_status_email = Global_dict['start_up_status_email']
     #Override for start emails!
     send_start_up_status_email = "true"
-    
-    #if email_user is not None and email_passwd is not None and email_recipient_addr is not None:
-    if send_start_up_status_email == "true":
-        send_email(email_user[::-1], email_passwd[::-1], Global_dict['email_recipient_addr'][::-1],  
-               "PI Temperature Monitoring Power Up Status", 
-               "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
-               "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + "\n\n\nHome page:\nhttp://" + ip_address + 
-               "/home\n                       or\nhttp://" + socket.gethostname() + ".local/home\n\n")
-    #else:
-    #    cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
-    #    cfuncs.write_to_log(lg, "Email user: " + str(email_user))
-    #    cfuncs.write_to_log(lg, "Email passwd: " + str(email_passwd))
-    #    cfuncs.write_to_log(lg, "Email recipient: " + str(email_recipient_addr))
+
+    if email_user is not None and email_passwd is not None and email_recipient_addr is not None:
+        if send_start_up_status_email == "true": 
+            send_email(email_user, email_passwd, email_recipient_addr,  
+                   "PI Temperature Monitoring Power Up Status", 
+                   "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
+                   "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + "\n\n\nHome page:\nhttp://" + ip_address + "/home\n")
+    else:
+        cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
+        cfuncs.write_to_log(lg, "Email user: " + str(email_user))
+        cfuncs.write_to_log(lg, "Email passwd: " + str(email_passwd))
+        cfuncs.write_to_log(lg, "Email recipient: " + str(email_recipient_addr))
     
     settle_time = int(Global_dict['first_read_settle_time'])
     cfuncs.write_to_log(lg, "Waiting %d seconds for the initial readings" % settle_time)
