@@ -342,13 +342,12 @@ def do_main():
     cfuncs.write_to_log(lg, "------------------------    Checking Network Connection OK   ------------------------")
 
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
-    if ssid == '':
-        sys.exit(0)
+    if ssid != '':
+        network_status(True)
+    else:
+        network_status(False)
 
     ip_address = cfuncs.get_local_ip_address(lg)
-    
-    network_status(True)
-    
     cfuncs.write_to_log(lg, "------------------------    Checking Database Connection OK   -----------------------")
 
     db_conn = cfuncs.setup_db_connection(lg, "localhost", database_name, database_user_name, database_password)
@@ -426,13 +425,7 @@ def do_main():
     cfuncs.write_to_log(lg, "Waiting %d seconds for the initial readings" % settle_time)
     time.sleep(settle_time)
 
-    while True:
-        ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
-        if ssid != '':
-            network_status(True)
-        else:
-            network_status(False)
-            
+    while True:            
         all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
         no_of_sensors = len(all_sensors_list)
         if no_of_sensors == 3:
@@ -454,13 +447,23 @@ def do_main():
                 cfuncs.write_to_log(lg, "***No info for sensor " + sensor_name + ", ignoring! Temp is " + str(read_temp(sensor_name)))
         loop_time = int(Global_dict['sensor_polling_freq'])
         cfuncs.write_to_log(lg, "The next reading will be taken in " + str(int(round(loop_time / 60, 0))) + " minutes")
-        print("\n-----------   Temperature Sensor Readings Taken, Now Waiting for loop time   --------\n")
         safe_to_unplug(True)
-        time.sleep(loop_time)
-        os.system('clear')
-    else:
-        cfuncs.write_to_log(lg, "***No sensor db id found, exiting")
-    #dump_all_db_data_out(cursor)
+        
+        net_checking_count = 10
+        net_checking_loop_time = (loop_time / net_checking_count)
+        count = 1
+        while count <= net_checking_count:
+            cfuncs.write_to_log(lg, "In network monitor loop(" + str(count) + ") before resampling temps again")
+            ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
+            if ssid != '':
+                network_status(True)
+            else:
+                network_status(False)
+            count += 1
+            time.sleep(net_checking_loop_time)
+            
+        cfuncs.write_to_log(lg, "Exited network monitor loop, one for sleep before resampling temps again")    
+        time.sleep(net_checking_loop_time)
 
 ########################################################################################################
 
