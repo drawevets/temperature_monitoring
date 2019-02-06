@@ -5,7 +5,7 @@ import glob
 import MySQLdb
 import os
 import platform
-
+import re
 import subprocess
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
@@ -152,9 +152,10 @@ def get_filesystem_stats(caller):
     statvfs = os.statvfs('/')
     total_capacity = round(statvfs.f_frsize * statvfs.f_blocks / (1024*1024*1024), 3)
     free_space = round(statvfs.f_frsize * statvfs.f_bfree / (1024*1024*1024), 3)
+    disk_used = round( ((statvfs.f_frsize * statvfs.f_blocks) - (statvfs.f_frsize * statvfs.f_bfree)) / (1024*1024*1024), 3)
     write_to_log(caller, "   Total capacity = " + str(total_capacity) + "   Free space = " + str(free_space))
     write_to_log(caller, "cf: << get_filesystem_stats()")
-    return total_capacity, free_space
+    return total_capacity, free_space, disk_used
     
 
 def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
@@ -199,6 +200,16 @@ def get_local_ip_address(caller):
     write_to_log(caller, "cf: << get_local_ip_address()")
     return ip_address
 
+
+def get_size_of_directory(caller, directory):
+    cmd = ["du", "-sh", "-b", directory]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    tmp = str(proc.stdout.read())
+    size = (re.findall('\d+', tmp)[0])
+    sizemb = round(int(size)/(1024*1024), 3)
+    write_to_log(caller, "   Size of " + directory + " is " + str(sizemb) + "MB")
+    return sizemb
+    
 
 def get_system_information():
     os = platform.system()
