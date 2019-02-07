@@ -4,10 +4,8 @@ import common_functions as cfuncs
 import datetime
 import MySQLdb
 import glob
-from flask import Flask
-from flask import render_template
+from flask import Flask, render_template, redirect, url_for
 import os
-from pathlib import Path
 import socket
 import subprocess
 
@@ -50,11 +48,57 @@ def home():
             temp_sensor_ids.append(temp_sensor_id)
         
         temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
-    
+    else:
+        temp_details = None
+        
     return render_template('home.html', version = vstring,
                                         page_heading = 'Last Saved Temperature Readings', 
                                         title = 'Last Recorded', 
                                         temp_data = temp_details)     
+
+
+@app.route("/home2")
+def home2():
+    vstring = cfuncs.app_version()
+    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+    if all_sensors_list is not None:
+    #                                         Log     Location   DB Name    DB Username   DB Passwd 
+        db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+        if db_conn is None:
+            return("<html><h1>DB connection failed!</h1></html>")
+
+        cursor = db_conn.cursor()
+        
+        sensors_connected = cfuncs.get_all_connected_sensor_ids("web", cursor)
+        
+        reading_dates = []
+        temperatures = []
+        temp_sensor_aliass = []
+        temp_sensor_ids = []
+        
+        for sensor_id in sensors_connected:
+            reading_date, temperature, temp_sensor_alias, temp_sensor_id = cfuncs.get_last_temperature_reading_from_db("web", cursor, sensor_id)
+            reading_dates.append(reading_date)
+            temperatures.append(temperature)
+            temp_sensor_aliass.append(temp_sensor_alias)
+            temp_sensor_ids.append(temp_sensor_id)
+        
+        temp_details = list(zip(temp_sensor_aliass, temp_sensor_ids, reading_dates, temperatures))
+    else:
+        temp_details = None
+        
+    return render_template('home2.html', version = vstring,
+                                        page_heading = 'Last Saved Temperature Readings', 
+                                        title = 'Last Recorded', 
+                                        temp_data = temp_details)     
+
+
+
+@app.route("/clear_log_archive")
+def clear_log_archive():
+    cfuncs.clear_log_archive(lg)
+    return redirect(url_for('status'))
 
 
 @app.route("/current_temps")
@@ -114,7 +158,7 @@ def status():
     os, architecture, oskernel, firmwareversion, uptime = cfuncs.get_system_information()
     total_capacity, free_space, disk_used = cfuncs.get_filesystem_stats(lg)
     logs_directory_size = cfuncs.get_size_of_directory(lg, '/home/steve/temperature_monitoring/logs')
-    log_file_size = cfuncs.get_size_of_directory(lg, '/home/steve/temperature_monitoring/log.txt')
+    log_file_size = cfuncs.get_size_of_file(lg, '/home/steve/temperature_monitoring/log.txt')
 
     return render_template('status.html',
                             version=vstring,
@@ -716,24 +760,7 @@ def get_no_of_sensors_and_sensor_id_in_db(db_cursor):
     return no_of_sensors, sensor_ids
 
 
-def clean_old_log_file():
-    now = datetime.datetime.now()
-    log_date = str(now.day) + str(now.month).zfill(2) + str(now.year) + "_" + str(now.hour).zfill(2) + str(now.minute).zfill(2)
-    logs_dir = Path("/home/steve/temperature_monitoring/logs")
-    log_file = Path("/home/steve/temperature_monitoring/weblog.txt")
-    if log_file.is_file():   
-        # log file exists
-        os.system("gzip -q weblog.txt")
-        if logs_dir.is_dir():
-            #print("found logs dir")
-            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
-        else:
-            #print("making logs dir")
-            os.system("mkdir logs")
-            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
-
-
 if __name__ == '__main__':
-    clean_old_log_file()
+    cfuncs.clean_old_log_file()
     app.run(host='0.0.0.0', port=80, debug=True)
     

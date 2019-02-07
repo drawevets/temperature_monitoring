@@ -12,6 +12,21 @@ h2 {
   color: #191919;
 }
 
+.btn-primary {
+    display: block;
+    margin: 0 0 auto auto;
+    color: #fff;
+    background-color: #3e79b9;
+    border-color: #1a1b1d;
+    border-radius: 5px;
+    padding: 3px;
+    font-style: oblique;
+}
+
+.btn-primary:hover {
+    background-color: #1a4778;
+}
+
 .bg-steel {
   background-color: #300081;
 }

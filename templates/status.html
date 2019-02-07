@@ -56,7 +56,8 @@
                         <td>{{ disk_free_space }} GB</td>
                     </tr>
                     <tr>
-                        <td colspan="2"><canvas id="myChart" width="450" height="300"></canvas></td>
+                        <td colspan="2"><canvas id="myChart" width="450" height="300"></canvas>
+                        <a href="{{ url_for('clear_log_archive') }}"><button type='button' class='btn btn-primary' id='b1'>Clear Log File Archive</button></a></td>
                     </tr>
                     </tr>
                         <td>Current Log File</td>
@@ -66,8 +67,11 @@
                         <td>Log File Archive</td>
                         <td>{{ logs_size }} MB</td>
                     </tr>
+
                 </tbody>
+
             </table>
+            </br>
             </br>
 
             <script>

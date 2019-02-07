@@ -4,6 +4,7 @@ import datetime
 import glob
 import MySQLdb
 import os
+from pathlib import Path
 import platform
 import re
 import subprocess
@@ -67,6 +68,35 @@ def check_wireless_network_connection(caller):
         
     write_to_log(caller, "cf: << check_wireless_network_connection()")
     return ssid, quality, level
+
+
+def clean_old_log_file():
+    now = datetime.datetime.now()
+    log_date = str(now.day) + str(now.month).zfill(2) + str(now.year) + "_" + str(now.hour).zfill(2) + str(now.minute).zfill(2)
+    logs_dir = Path("/home/steve/temperature_monitoring/logs")
+    log_file = Path("/home/steve/temperature_monitoring/weblog.txt")
+    if log_file.is_file():   
+        # log file exists
+        os.system("gzip -q weblog.txt")
+        if logs_dir.is_dir():
+            #print("found logs dir")
+            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
+        else:
+            #print("making logs dir")
+            os.system("mkdir logs")
+            os.system("mv -f weblog.txt.gz logs/weblog_" + log_date + ".gz")
+
+
+def clear_log_archive(caller):
+    write_to_log(caller, "cf: >> clear_log_archive()")
+    logs_dir = "/home/steve/temperature_monitoring/logs"
+    logs_dir_path = Path(logs_dir)
+
+    if logs_dir_path.is_dir():
+        write_to_log(caller, "cf:   logs directory exists, attempting to rm it!")
+        os.system("rm -rf " + logs_dir)
+        
+    write_to_log(caller, "cf: << clear_log_archive()")
 
 
 def find_all_temp_sensors_connected(caller):
@@ -202,12 +232,30 @@ def get_local_ip_address(caller):
 
 
 def get_size_of_directory(caller, directory):
-    cmd = ["du", "-sh", "-b", directory]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    tmp = str(proc.stdout.read())
-    size = (re.findall('\d+', tmp)[0])
-    sizemb = round(int(size)/(1024*1024), 3)
-    write_to_log(caller, "   Size of " + directory + " is " + str(sizemb) + "MB")
+    dir_path = Path(directory)
+    sizemb = 0
+    
+    if dir_path.is_dir():
+        cmd = ["du", "-sh", "-b", directory]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        tmp = str(proc.stdout.read())
+        size = (re.findall('\d+', tmp)[0])
+        sizemb = round(int(size)/(1024*1024), 3)
+        write_to_log(caller, "   Size of " + directory + " is " + str(sizemb) + "MB")
+    return sizemb
+
+
+def get_size_of_file(caller, file_to_check):
+    file_path = Path(file_to_check)
+    sizemb = 0
+    
+    if file_path.is_file():
+        cmd = ["du", "-sh", "-b", file_to_check]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        tmp = str(proc.stdout.read())
+        size = (re.findall('\d+', tmp)[0])
+        sizemb = round(int(size)/(1024*1024), 3)
+        write_to_log(caller, "   Size of " + file_to_check + " is " + str(sizemb) + "MB")
     return sizemb
     
 
