@@ -5,10 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <script type = "text/JavaScript">
+      function AutoRefresh( t ) {
+         setTimeout("location.reload(true);", t);
+      }
+    </script>
+
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
     <link rel="stylesheet" type=""text/css" href="{{ url_for('static', filename='main.css')}}">
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
     {% if title %}
         <title>Temps - {{ title }}</title>
@@ -16,12 +25,12 @@
         <title>Temps</title>
     {% endif %}
 </head>
-<body>
+<body onload = "JavaScript:AutoRefresh(60000);">
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a class="navbar-brand" href="/">Raspberry Pi Temperature Monitoring System</a>
+                <i class="fas fa-home size:x2"></i><a class="navbar-brand" href="/">Pi Temperature Monitoring System</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -41,44 +50,48 @@
                 <a class="nav-item nav-link" href="{{ url_for('current_temps') }}">Current</a>
                 <a class="nav-item nav-link" href="#"> </a>
                 <a class="nav-item nav-link" href="#"> </a>
-                <a class="nav-item nav-link" href="{{ url_for('status') }}">System Status</a>
+                <a class="nav-item nav-link" href="{{ url_for('status') }}"><i class="fas fa-cogs"></i>System Status</a>
             </div>
           </div>
         </div>
       </nav>
     </header>
     <main role="main" class="container">
-      <div class="row">
-        <div class="col-md-12">
-            {% if page_heading %}
-            <h2>{{ page_heading }}</h2></br>
-            {% endif %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor%}
+        <div class="row">
+            <div class="col-md-12">
+                {% if page_heading %}
+                <h2>{{ page_heading }}</h2></br>
                 {% endif %}
-            {% endwith %}
-            {% block content %}{% endblock %}
-            {% if version %}
-        </br></br></br><h5><small><i><p class="text-left">Temperature Monitoring System - {{ version }}</p></i></small></h5>
-            {% endif %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor%}
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+
+                </br>
+                </br>
+                <p class="text-muted" style="text-align:right;"><i>This page will auto refresh every 60 seconds.....
+                <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
+                {% if version %}
+            </br></br></br><h5><small><i><p class="text-muted text-left">Temperature Monitoring System - {{ version }}</p></i></small></h5>
+                {% endif %}
+            </div>
         </div>
+         <div class="container">
 
-      </div>
-      <div class="container">
+         </div>
 
-</div>
-
+    </div>
     </main>
-
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.bundle.min.js" integrity="sha384-zDnhMsjVZfS3hiP7oCBRmfjkQC4fzxVxFhBx8Hkz2aZX8gEvA/jsP3eXRCvzTofP" crossorigin="anonymous"></script>
 </body>
 </html>

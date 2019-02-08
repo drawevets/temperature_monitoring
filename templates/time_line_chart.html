@@ -196,5 +196,158 @@
             }
         //showLine: true
         });
+
+        function updateScalesDay(chart) {
+            chart.options.scales = {
+                xAxes: [{
+                    //type: 'time',
+                    distribution: 'linear',
+                    ticks: {
+                        // Convert UNIX time back to something meaningful
+                        callback: function(value, index, values) {
+                                full = new Date(value);
+                                dayval = full.getDate();
+                                dayval = ("0"+dayval).slice(-2); // Pad with leading zero
+                                day = full.getDay(); // Day as a number 0 Sunday - 6 Saturday
+                                month = full.getMonth();
+                                month = ("0"+month).slice(-2); // Pad with leading zero
+                                year = full.getFullYear();
+                                hours = full.getHours();
+                                hours = ("0"+hours).slice(-2); // Pad with leading zero
+                                minutes = full.getMinutes();
+                                minutes = ("0"+minutes).slice(-2); // Pad with leading zero
+                                {% if show_date_only %}
+                                    //return (day + '/' + month + ' ' +hours + ':' + minutes);
+                                    return (dayval + '/' + month);
+                                {% else %}
+                                    return (hours + ':' + minutes);
+                                {% endif %}
+                            },
+                            {% if xaxis %}
+                                min: {{ xaxis[0] }},
+                                max: {{ xaxis[1] }},
+                            {% else %}
+
+                            {% endif %}
+                            padding: 5,
+                            fontSize: 12,
+                            fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 13,
+                        fontStyle: 'normal',
+                        labelString: 'Time'
+                    },
+                    gridLines: {
+                        display: true,
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    ticks: {
+                        beginAtZero: false,
+                        //suggestedMin: 5,
+                        //suggestedMax: 10,
+                        padding: 5,
+                        stepSize: 2,
+                        fontSize: 13,
+                        fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 14,
+                        fontStyle: 'normal',
+                        labelString: 'Temperature DegC'
+                    },
+                    gridLines: {
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                    }
+                }]
+            }
+            chart.update();
+        }
+        function updateScalesWeek(chart) {
+            chart.options.scales = {
+                xAxes: [{
+                    //type: 'time',
+                    distribution: 'linear',
+                    ticks: {
+                        // Convert UNIX time back to something meaningful
+                        callback: function(value, index, values) {
+                                full = new Date(value);
+                                dayval = full.getDate();
+                                dayval = ("0"+dayval).slice(-2); // Pad with leading zero
+                                day = full.getDay(); // Day as a number 0 Sunday - 6 Saturday
+                                month = full.getMonth();
+                                month = ("0"+month).slice(-2); // Pad with leading zero
+                                year = full.getFullYear();
+                                hours = full.getHours();
+                                hours = ("0"+hours).slice(-2); // Pad with leading zero
+                                minutes = full.getMinutes();
+                                minutes = ("0"+minutes).slice(-2); // Pad with leading zero
+                                {% if show_date_only %}
+                                    //return (day + '/' + month + ' ' +hours + ':' + minutes);
+                                    return (dayval + '/' + month);
+                                {% else %}
+                                    return (hours + ':' + minutes);
+                                {% endif %}
+                            },
+                            {% if xaxis %}
+                                min: {{ xaxis[0] }},
+                                max: {{ xaxis[1] }},
+                            {% else %}
+
+                            {% endif %}
+                            padding: 5,
+                            fontSize: 12,
+                            fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 13,
+                        fontStyle: 'normal',
+                        labelString: 'Time'
+                    },
+                    gridLines: {
+                        display: true,
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+                }],
+                yAxes: [{
+                    type: 'logarithmic',
+                    ticks: {
+                        beginAtZero: false,
+                        //suggestedMin: 5,
+                        //suggestedMax: 10,
+                        padding: 5,
+                        stepSize: 2,
+                        fontSize: 13,
+                        fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 14,
+                        fontStyle: 'normal',
+                        labelString: 'Temperature DegC'
+                    },
+                    gridLines: {
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                    }
+                }]
+            }
+            chart.update();
+        }
     </script>
+    <input id="Day Button" type="button" value="Test Linear" onClick="updateScalesDay(myChart);"/>
+    <input id="Week Button" type="button" value="Test Log" onClick="updateScalesWeek(myChart);"/>
 {% endblock content %}

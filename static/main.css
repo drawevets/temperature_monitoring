@@ -23,6 +23,39 @@ h2 {
     font-style: oblique;
 }
 
+.refresh-button {
+    border-radius: 5px;
+    padding: 3px;
+    font-style: oblique;
+}
+
+.fa, .fas {
+
+    font-weight: 900;
+    padding: 0px 5px;
+    color: white;
+
+}
+
+.fa-cogs{
+
+    font-weight: 900;
+    padding: 0px 5px;
+    color: #cbd5db;
+}
+.fa-cogs:hover{
+    font-weight: 900;
+    padding: 0px 5px;
+    color: #ffffff;
+}
+
+.fa-laptop,
+.fa-database,
+.fa-wifi,
+.fa-temperature-low{
+    color: #444444;
+}
+
 .btn-primary:hover {
     background-color: #1a4778;
 }
