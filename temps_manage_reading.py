@@ -212,7 +212,7 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
     settings = [('sensor_polling_freq', '600'),
                 ('write_to_logfile', 'true'),
                 ('start_up_status_email', 'true'),
-                ('first_read_settle_time', '15')
+                ('first_read_settle_time', '15')]
     
     no_of_settings = len(settings)
     settings_added = 0

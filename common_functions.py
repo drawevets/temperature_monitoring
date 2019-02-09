@@ -264,10 +264,6 @@ def get_system_information():
     architecture = platform.machine()
     oskernel = platform.platform()
     firmwareversion = platform.version()
-    print("OS: " + os)
-    print("Architecture: " + architecture)
-    print("OS Kernel: " + oskernel)
-    print("Firmware version: " + firmwareversion)
 
     with open('/proc/uptime', 'r') as f:
         uptime_seconds = float(f.readline().split()[0])
@@ -323,6 +319,41 @@ def read_temp_raw(caller, sensor_id):
     f.close()
     write_to_log(caller, "cf: << read_temp_raw()")
     return lines
+
+
+def reset_setting_db_table_to_defaults(caller):
+    write_to_log(caller, "cf: >> reset_setting_db_table_to_defaults()")
+    
+    result = False
+    
+    #                                         Location      DB Name  DB Username   DB Passwd
+    tmp_db_conn = setup_db_connection(caller, "localhost",  "temps", "temps_admin", "admin",)
+
+    if tmp_db_conn is None:
+        write_to_log(caller, "cf:   DB connection failed!")
+        return result
+    else:
+        write_to_log(caller, "cf:   DB connection OK")
+
+    tmp_db_conn_cursor = tmp_db_conn.cursor()
+
+    db_table_to_be_dropped = "TEMP_APP_SETTINGS"
+
+    check = check_table_exists(caller, tmp_db_conn_cursor, db_table_to_be_dropped)
+    if check is not None:
+        write_to_log(caller, "cf:   Removing " + db_table_to_be_dropped + " table")
+        tmp_db_conn_cursor.execute("DROP TABLE IF EXISTS " + db_table_to_be_dropped)
+        tmp_db_conn.commit()
+        write_to_log(caller, "cf:   Table removed OK")
+        result = True
+    else:
+        write_to_log(caller, "cf:   Table does not exist!")
+
+    tmp_db_conn_cursor.close()
+    tmp_db_conn.close()
+
+    write_to_log(caller, "cf: << reset_setting_db_table_to_defaults()")
+    return result
 
 
 def setup_db_connection(caller, host, db, user, passwd):

@@ -57,4 +57,4 @@ if __name__ == "__main__":
             print("Failed to write to /home/steve/temperature_monitoring/last_change.txt")
             
         print("Check complete.....reseting now....")
-        #os.system("/sbin/shutdown -r 0")
+        os.system("/sbin/shutdown -r 0")

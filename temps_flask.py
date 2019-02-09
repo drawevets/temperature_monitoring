@@ -53,7 +53,8 @@ def home():
         
     return render_template('home.html', version = vstring,
                                         page_heading = 'Last Saved Temperature Readings', 
-                                        title = 'Last Recorded', 
+                                        title = 'Last Recorded',
+                                        autorefresh_required = None,
                                         temp_data = temp_details)     
 
 
@@ -100,6 +101,23 @@ def clear_log_archive():
     return redirect(url_for('status'))
 
 
+@app.route("/clear_app_settings")
+def clear_app_settings():
+    result = cfuncs.reset_setting_db_table_to_defaults(lg)
+    
+    if result is False:
+        return redirect(url_for('status'))
+    else:
+        return redirect(url_for('cleared_app_settings'))
+
+
+@app.route("/cleared_app_settings")
+def cleared_app_settings():
+    os.system("/sbin/shutdown -r 0")
+    return ("<html><h2>Settings reset to defaults</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
+    url_for('home') + ">Reload the home page.....</a></h3></html>")
+
+
 @app.route("/current_temps")
 def current_temps():
     vstring = cfuncs.app_version()
@@ -136,8 +154,9 @@ def current_temps():
         
     return render_template('live_temps.html', version = vstring,
                                         page_heading = 'Current Temperature Readings', 
-                                        title = 'Current Temps', 
-                                        temp_data = temp_details)  
+                                        title = 'Current Temps',
+                                        autorefresh_required = True,
+                                        temp_data = temp_details)
 
 
 @app.route("/status")
@@ -264,6 +283,7 @@ def onehour_chart():
                            version = vstring,
                            page_heading = '',
                            title = page_title,
+                           autorefresh_required = True,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -348,6 +368,7 @@ def fourhour_chart():
                            version = vstring,
                            page_heading = '',
                            title = page_title,
+                           autorefresh_required = True,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -432,6 +453,7 @@ def today_chart():
                            version=vstring,
                            page_heading = '',
                            title=page_title,
+                           autorefresh_required = True,
                            temps1=str(data1).replace('\'', ''), 
                            temps2=str(data2).replace('\'', ''), 
                            temps3=str(data3).replace('\'', ''), 
@@ -520,6 +542,7 @@ def twentyfourhour_chart():
                            version=vstring,
                            page_heading = '',
                            title=page_title,
+                           autorefresh_required = True,
                            temps1=str(data1).replace('\'', ''), 
                            temps2=str(data2).replace('\'', ''), 
                            temps3=str(data3).replace('\'', ''), 
@@ -609,6 +632,7 @@ def week_chart():
                            page_heading = '',
                            title = page_title,
                            show_date_only = True,
+                           autorefresh_required = True,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -690,8 +714,10 @@ def weekoverview_chart():
     chart_title2 = 'Daily Overview of Temperatures (' + all_sensor_aliases[1] + ')'
     chart_title3 = 'Daily Overview of Temperatures (' + all_sensor_aliases[2] + ')'
     return render_template('weekoverview_chart.html',
-                           version=cfuncs.app_version(), title=page_title,
+                           version=cfuncs.app_version(),
+                           title=page_title,
                            chart_title1=chart_title1,
+                           autorefresh_required = True,
                            date_labels1 = all_dates[0],
                            mins1 = all_min_temps[0],
                            avgs1 = all_avg_temps[0],

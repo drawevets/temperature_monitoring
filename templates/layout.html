@@ -25,7 +25,11 @@
         <title>Temps</title>
     {% endif %}
 </head>
-<body onload = "JavaScript:AutoRefresh(60000);">
+{% if autorefresh_required %}
+    <body onload = "JavaScript:AutoRefresh(60000);">
+{% else %}
+    <body>
+{% endif %}
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container-fluid">
@@ -72,20 +76,21 @@
                     {% endif %}
                 {% endwith %}
                 {% block content %}{% endblock %}
-
-                </br>
-                </br>
-                <p class="text-muted" style="text-align:right;"><i>This page will auto refresh every 60 seconds.....
-                <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
+                {% if autorefresh_required %}
+                    </br>
+                    </br>
+                    </br>
+                    <p class="text-muted" style="text-align:right;"><i>This page will auto refresh every 60 seconds.....
+                    <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
+                {% endif %}
                 {% if version %}
-            </br></br></br><h5><small><i><p class="text-muted text-left">Temperature Monitoring System - {{ version }}</p></i></small></h5>
+                    </br></br></br><h5><small><i><p class="text-muted text-left">Temperature Monitoring System - {{ version }}</p></i></small></h5>
                 {% endif %}
             </div>
         </div>
          <div class="container">
 
          </div>
-
     </div>
     </main>
     <!-- Optional JavaScript -->

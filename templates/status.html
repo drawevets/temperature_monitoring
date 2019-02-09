@@ -173,6 +173,9 @@
             {% else %}
                 <h3>No Temperature sensors detected!</h3>
             {% endif %}
+            </br>
+            </br>
+            <a href="{{ url_for('clear_app_settings') }}"><button type='button' class='btn btn-warning' id='b1'>Reset All Settings to Default!</button></a>
         </div>
     </div>
 </div>
