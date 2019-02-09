@@ -18,12 +18,12 @@ def CheckForUpdate(workingDir):
     # Fetch most up to date version of code.
     #p = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "fetch", "origin", "master", _out=ProcessFetch, _out_bufsize=0, _tty_in=True)               
     p = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "fetch", "origin", "master", _out_bufsize=0, _tty_in=True)               
-    
+    print(p)
     print("Fetch complete.")
     time.sleep(2)
     print("Checking status for " + workingDir + "...")
     statusCheck = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "status")
-
+    print(statusCheck)
     if "Your branch is up-to-date" in statusCheck:
         print("Status check passes.")
         print("Code up to date.")
@@ -43,5 +43,7 @@ if __name__ == "__main__":
         print("Resetting code...")
         resetCheck = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "reset", "--hard", "origin/master")
         print(str(resetCheck))
+        last_change = str(resetCheck).split('HEAD is now at ')
+        print("Last change: " + last_change)
         print("Check complete.....reseting now....")
         os.system("/sbin/shutdown -r 0")
