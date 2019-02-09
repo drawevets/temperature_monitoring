@@ -113,6 +113,7 @@ def clear_app_settings():
 
 @app.route("/cleared_app_settings")
 def cleared_app_settings():
+    cfuncs.write_to_last_change_file(lg, "Restart after user requested all settings reset to default")
     os.system("/sbin/shutdown -r 0")
     return ("<html><h2>Settings reset to defaults</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>")

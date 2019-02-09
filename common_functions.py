@@ -14,7 +14,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.117 - Last updated: 09/02/19")
+    return ("v0.120 - Last updated: 09/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -400,3 +400,14 @@ def write_to_log(caller, text_to_write):
         except:
             print("Failed to open " + log_file + " for writing")
 
+
+def write_to_last_change_file(caller, reason):
+        try:
+            change_file =  open("/home/steve/temperature_monitoring/last_change.txt", 'w+')
+            now = datetime.datetime.now()
+            log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
+            log_string = log_date + " " + reason
+            change_file.write(log_string + "\n")
+            change_file.close()
+        except:
+            print("Failed to write to /home/steve/temperature_monitoring/last_change.txt")

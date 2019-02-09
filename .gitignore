@@ -1,6 +1,6 @@
 log.txt
 update_log.txt
-logs/*
+logs/*.*
 __pycache__/
 email_config.py
 weblog.txt

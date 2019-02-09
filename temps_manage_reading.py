@@ -434,7 +434,7 @@ def do_main():
                 last_change_string = "User restart or other unplanned restart"
             send_email(email_user, email_passwd, email_recipient_addr,  
                    "PI Temperature Monitoring Reset/Power Up Alert", 
-                   "Reset reason:   " + last_change_string + "\n\n" + 
+                   "Reset reason:\n               " + last_change_string + "\n\n" + 
                    "\nSystem status: \n" + 
                    "\n      Connected WiFi network: " + ssid + "  -  OK\n" + 
                    "\n      Initial startup and checking of DB  -  OK\n" + 
