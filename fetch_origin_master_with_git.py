@@ -52,6 +52,7 @@ if __name__ == "__main__":
             log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
             log_string = log_date + " " + str(last_change_str[1])
             print(log_string)
+            change_file.write(log_string)
             change_file.close()
         except:
             print("Failed to write to /home/steve/temperature_monitoring/last_change.txt")
