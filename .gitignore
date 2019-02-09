@@ -4,4 +4,4 @@ logs/*
 __pycache__/
 email_config.py
 weblog.txt
-
+last_change.txt
