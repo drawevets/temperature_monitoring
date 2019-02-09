@@ -43,7 +43,18 @@ if __name__ == "__main__":
         print("Resetting code...")
         resetCheck = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "reset", "--hard", "origin/master")
         print(str(resetCheck))
-        last_change = str(resetCheck).split('HEAD is now at ')
-        print("Last change: " + str(last_change[1]))
+        last_change_str = str(resetCheck).split('HEAD is now at ')
+        print("Last change: " + str(last_change_str[1]))
+
+        try:
+            change_file =  open("/home/steve/temperature_monitoring/last_change.txt", 'w')
+            now = datetime.datetime.now()
+            log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
+            log_string = log_date + " " + str(last_change_str[1])
+            print(log_string)
+            change_file.close()
+        except:
+            print("Failed to write to /home/steve/temperature_monitoring/last_change.txt")
+            
         print("Check complete.....reseting now....")
         os.system("/sbin/shutdown -r 0")
