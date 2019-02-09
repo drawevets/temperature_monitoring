@@ -44,6 +44,6 @@ if __name__ == "__main__":
         resetCheck = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "reset", "--hard", "origin/master")
         print(str(resetCheck))
         last_change = str(resetCheck).split('HEAD is now at ')
-        print("Last change: " + last_change)
+        print("Last change: " + last_change[1])
         print("Check complete.....reseting now....")
         os.system("/sbin/shutdown -r 0")
