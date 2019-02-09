@@ -14,7 +14,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.105 - Last updated: 09/02/19")
+    return ("v0.117 - Last updated: 09/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):

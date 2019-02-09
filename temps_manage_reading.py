@@ -436,8 +436,10 @@ def do_main():
             send_email(email_user, email_passwd, email_recipient_addr,  
                    "PI Temperature Monitoring Reset/Power Up Alert", 
                    "Reset reason:   " + last_change_string + "\n\n" + 
-                   "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
-                   "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + 
+                   "\nSystem status: \n" + 
+                   "\n      Connected WiFi network: " + ssid + "  -  OK\n" + 
+                   "\n      Initial startup and checking of DB  -  OK\n" + 
+                   "\n      Temperature Sensors detected:  "+ str(len(all_sensors_list)) + 
                    "\n\n\nHome page:  http://" + ip_address + "/home\n")
     else:
         cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
