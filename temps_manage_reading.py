@@ -171,7 +171,7 @@ def manage_settings_db_and_dict_stuff(db_conn, db_cursor):
     else:
         cfuncs.write_to_log(lg, "   OK - TEMP_APP_SETTINGS table exists")
 
-    existing, added = check_for_settings_for_defaults_and_updates(db_conn, db_cursor)
+    existing, added = check_settings_for_defaults_and_updates(db_conn, db_cursor)
     if existing is None:
         clean_shutdown()
     else:
@@ -206,14 +206,13 @@ def create_settings_table(db_conn, db_cursor):
     return 0
 
 
-def check_for_settings_for_defaults_and_updates(db_conn, db_cursor):
-    cfuncs.write_to_log(lg, ">> check_for_settings_for_defaults_and_updates()")
+def check_settings_for_defaults_and_updates(db_conn, db_cursor):
+    cfuncs.write_to_log(lg, ">> check_settings_for_defaults_and_updates()")
     
     settings = [('sensor_polling_freq', '600'),
                 ('write_to_logfile', 'true'),
-                ('start_up_status_email', 'false'),
-                ('first_read_settle_time', '15'),
-                ('email_recipient_addr', 'moc.liamg@draws.rednef')]
+                ('start_up_status_email', 'true'),
+                ('first_read_settle_time', '15')
     
     no_of_settings = len(settings)
     settings_added = 0
@@ -238,7 +237,7 @@ def check_for_settings_for_defaults_and_updates(db_conn, db_cursor):
             settings_existing += 1
             #cfuncs.write_to_log(lg, "   EXISTS: Setting:  " + setting + "   Value: " + value)
             
-    cfuncs.write_to_log(lg, "<< check_for_settings_for_defaults_and_updates()")    
+    cfuncs.write_to_log(lg, "<< check_settings_for_defaults_and_updates()")    
     return settings_existing, settings_added
 
     
