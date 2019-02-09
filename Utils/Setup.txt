@@ -1,3 +1,4 @@
+-------------------------------------------------------------
 Login to a new Raspbian Stretch Lite build
 
 Login: pi
@@ -5,13 +6,13 @@ Passwd: raspberry
 
 # Add new user
 sudo adduser steve
-
+-------------------------------------------------------------
 # Add new user to sudo privileges
 sudo visudo
 
 # add under root
 steve  ALL=(ALL) ALL
-
+-------------------------------------------------------------
 #Logout
 
 #Login as new User: steve
@@ -22,7 +23,7 @@ sudo -remove-home pi
 
 #Load Raspberry Pi Config App
 sudo raspi-config
-
+-------------------------------------------------------------
 #Update tool first
 
 #Network Options
