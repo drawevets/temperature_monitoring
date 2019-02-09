@@ -37,6 +37,8 @@ Global_db_conn = None
 Global_dict = None
 Global_logfile = None
 
+last_change_string = None
+
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
 
 def setup_gpio():
@@ -288,6 +290,21 @@ def reset_sensor_connected_status(db_conn, db_cursor):
     return id, temp_offset
 
 
+def read_last_change_file_and_remove():
+    reason = None
+    change_file_path = "/home/steve/temperature_monitoring/last_change.txt"
+    change_file = Path(change_file_path)
+    if change_file.is_file():   
+        #print("file exists")
+        change_file =  open("/home/steve/temperature_monitoring/last_change.txt", 'r')
+        reason = change_file.read()
+        print(reason)
+        change_file.close()
+        os.system("rm -f " + change_file_path)
+            
+    return reason
+
+
 def dump_all_db_data_out(db_cursor):
     query = "SELECT * FROM temps.TEMP_READINGS"
     db_cursor.execute(query)
@@ -334,10 +351,16 @@ def do_main():
     global Global_db_cursor
     global Global_dict
     global send_start_up_status_email
+    
+    setup_gpio()
+    os.system('clear')
+    last_change_string = read_last_change_file_and_remove()
+    clean_old_log_file()
+    cfuncs.write_to_log(lg, "\n\n************  Started  -  all_temps_to_DB.py  ************\n")
 
     safe_to_unplug(True)
     all_sensors_list = None
-    cfuncs.write_to_log(lg, "------------------------    Checking Network Connection OK   ------------------------")
+    cfuncs.write_to_log(lg, "------------------------    Checking Network Connection is OK   ------------------------")
 
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     if ssid != '':
@@ -346,7 +369,7 @@ def do_main():
         network_status(False)
 
     ip_address = cfuncs.get_local_ip_address(lg)
-    cfuncs.write_to_log(lg, "------------------------    Checking Database Connection OK   -----------------------")
+    cfuncs.write_to_log(lg, "------------------------    Database Connection OK   -----------------------")
 
     db_conn = cfuncs.setup_db_connection(lg, "localhost", database_name, database_user_name, database_password)
     if db_conn is None:
@@ -405,13 +428,17 @@ def do_main():
     send_start_up_status_email = Global_dict['start_up_status_email']
     #Override for start emails!
     send_start_up_status_email = "true"
-
+    
     if email_user is not None and email_passwd is not None and email_recipient_addr is not None:
-        if send_start_up_status_email == "true": 
+        if send_start_up_status_email == "true":
+            if last_change_string is None:
+                last_change_string = "User restart or other unplanned restart"
             send_email(email_user, email_passwd, email_recipient_addr,  
-                   "PI Temperature Monitoring Power Up Status", 
+                   "PI Temperature Monitoring Reset/Power Up Alert", 
+                   "Reset reason:   " + last_change_string + "\n\n" + 
                    "\nConnected WiFi network: " + ssid + "  -  OK\n\nInitial startup and checking of DB  -  OK\n\n" + 
-                   "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + "\n\n\nHome page:\nhttp://" + ip_address + "/home\n")
+                   "Temperature Sensors detected:  "+ str(len(all_sensors_list)) + 
+                   "\n\n\nHome page:  http://" + ip_address + "/home\n")
     else:
         cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
         cfuncs.write_to_log(lg, "Email user: " + str(email_user))
@@ -465,8 +492,5 @@ def do_main():
 #Setup Handler for catching ctrl+c and kill signal, then shutdown cleanly
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-setup_gpio()
-os.system('clear')
-clean_old_log_file()
-cfuncs.write_to_log(lg, "\n\n************  Started  -  all_temps_to_DB.py  ************\n")
+
 do_main()
