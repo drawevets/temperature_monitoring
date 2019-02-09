@@ -127,28 +127,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Device Hostname</td>
-                        <td>{{ hostname }}</td>
-                    </tr>
-                    <tr>
-                        <td>IP Address</td>
-                        <td>{{ ip }}</td>
-                    </tr>
-                    <tr>
-                        <td> </td>
-                    </tr>
+
                     <tr>
                         <td>Network Connection SSID</td>
                         <td>{{ ssid }}</td>
+                    </tr>
+                    <tr>
+                        <td>Network Signal Level</td>
+                        <td>{{ level_perc }} % ({{ level }} dB)</td>
                     </tr>
                     <tr>
                         <td>Network Signal Quality</td>
                         <td>{{ quality }} %</td>
                     </tr>
                     <tr>
-                        <td>Network Signal Level</td>
-                        <td>{{ level }} dB</td>
+                        <td> </td>
+                    </tr>
+                    <tr>
+                        <td>IP Address</td>
+                        <td>{{ ip }}</td>
+                    </tr>
+                    <tr>
+                        <td>Device Hostname</td>
+                        <td>{{ hostname }}</td>
                     </tr>
                 </tbody>
             </table>

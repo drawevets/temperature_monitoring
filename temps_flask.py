@@ -94,7 +94,6 @@ def home2():
                                         temp_data = temp_details)     
 
 
-
 @app.route("/clear_log_archive")
 def clear_log_archive():
     cfuncs.clear_log_archive(lg)
@@ -144,7 +143,14 @@ def current_temps():
 @app.route("/status")
 def status():
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
-    
+    if (level <= -100):
+        level_perc = 0
+    elif (level >= -50):
+        level_perc = 100
+    else:
+        level_perc = 2 * (level + 100)
+        
+    quality_perc = 2 * (quality + 100)
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
     if all_sensors_list is not None:
         no_sensors = str(len(all_sensors_list))
@@ -178,6 +184,7 @@ def status():
                             ip = ip_address,
                             ssid=ssid,
                             quality=str(quality),
+                            level_perc=str(level_perc),
                             level=str(level),
                             no_sensors=no_sensors,
                             sensors_list=all_sensors_list)
