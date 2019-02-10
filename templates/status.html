@@ -56,7 +56,7 @@
                         <td>{{ disk_free_space }} GB</td>
                     </tr>
                     <tr>
-                        <td colspan="2"><canvas id="myChart" width="450" height="300"></canvas>
+                        <td colspan="2"><canvas id="myChart" width="450" height="200"></canvas>
                         <a href="{{ url_for('clear_log_archive') }}"><button type='button' class='btn btn-primary' id='b1'>Clear Log File Archive</button></a></td>
                     </tr>
                     </tr>
@@ -81,7 +81,7 @@
 
                 var ctx = document.getElementById("myChart").getContext('2d');
                 var myChart = new Chart(ctx, {
-                    type: 'doughnut',
+                    type: 'pie',
                     data: {
                         labels: ["Used", "Free Space"],
                         datasets: [{
@@ -113,12 +113,12 @@
                                 bottom: 0
                             }
                         },
-                        cutoutPercentage: 50
+                        //cutoutPercentage: 50
                     }
                 });
             </script>
             </br>
-            <h3><i class="fas fa-wifi"></i> Wireless Network Status</h3>
+            <h3><i class="fas fa-wifi"></i> Wi-Fi / Network Info</h3>
             <table class="table table-bordered table-sm">
                 <thead class="thead-light">
                     <tr>
@@ -155,7 +155,7 @@
             </table>
             </br>
             {% if sensors_list %}
-                <h3><i class="fas fa-temperature-low"></i> Temperature sensors connected</h3>
+                <h3><i class="fas fa-temperature-low"></i> Temperature Sensors Detected</h3>
                 <table class="table table-bordered table-sm">
                     <thead class="thead-light">
                         <tr>

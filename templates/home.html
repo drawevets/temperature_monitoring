@@ -1,38 +1,23 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-md7">
-            <div class="current_temps">
-                {% if temp_data %}
-                <table class="table table-bordered text-centered">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Date / Time</th>
-                            <th>Sensor Name</th>
-                            <th>Sensor ID</th>
-                            <th>Temperature</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sensor_name, sensor_id, time, temp  in temp_data %}
-                            <tr>
-                                <td> {{ time }} </td>
-                                <td> {{ sensor_name }} </td>
-                                <td> {{ sensor_id }} </td>
-                                <td> {{ temp }} </td>
-                            </tr>
-                        {% endfor%}
-                    </tbody>
-                    </br>
-                </table>
-                {% else %}
-                    </br><h3>No sensors currently connected</br>
-                    </br>                      or</br>
-                    </br>The system has recently been restarted, please try again......</h3>
-                {% endif %}
+    {% if temp_data %}
+        <div class="card-deck">
+            {% for sensor_name, sensor_id, time, temp  in temp_data %}
+            <div class="card bg-info">
+                <div class="card-body text-center">
+                    <p class="card-text"><h3><small><b>{{ sensor_name }}</b></small></h3></p>
+                    <p class="card-text"><h1 class="display-2">{{ temp }}</h1></p>
+                    <p class="card-text">@ {{ time }}</p>
+                    <p class="card-text"><small><i>({{ sensor_id }})</i></small></p>
+                </div>
             </div>
+            {% endfor%}
         </div>
-    </div>
+    {% else %}
+        </br><h3>No sensors currently connected</br>
+        </br>                      or</br>
+        </br>The system has recently been restarted, please try again......</h3>
+    {% endif %}
 </div>
 {% endblock content %}

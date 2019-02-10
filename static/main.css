@@ -4,12 +4,38 @@ body {
   margin-top: 5rem;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h3, h4, h5, h6 {
   color: #444444;
 }
 
 h2 {
   color: #191919;
+}
+
+h3 {
+  color: #101010;
+}
+
+/* Current Temps card colouring */
+.bg-success .display-2 {
+  /*color: #0000b9;*/
+  color: #f6f6f6;
+}
+.bg-success {
+    background-color: #39c359;
+}
+
+/* Last saved Temps card colouring */
+.bg-info .display-2 {
+  color: #f6f6f6;
+  /*color: #2013a1;*/
+}
+
+.card-deck .card {
+    margin-right: 15px;
+    margin-bottom: 0;
+    margin-left: 15px;
+    border-radius: 30px;
 }
 
 .btn-primary {
