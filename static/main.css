@@ -53,6 +53,17 @@ h3 {
     font-style: oblique;
 }
 
+.chng-name .btn-info{
+    display: block;
+    margin: 0 0 auto auto;
+    color: #fff;
+    background-color: #3e79b9;
+    border-color: #1a1b1d;
+    border-radius: 5px;
+    padding: 4px;
+    font-style: oblique;
+}
+
 .fa, .fas {
 
     font-weight: 900;

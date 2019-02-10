@@ -160,19 +160,26 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Sensor ID</th>
+                            <th>Display Name</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for sensor in sensors_list %}
+                        {% for sensor, sensor_alias in sensors_list %}
                             <tr>
                                 <td>{{ sensor }}</td>
+                                <td>{{ sensor_alias }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="chng-name">
+                    <a href="{{ url_for('edit_sensor_alias') }}"><button type='button' class='btn btn-info' id='b1'>Change Sensor Display Names</button></a>
+                </div>
             {% else %}
                 <h3>No Temperature sensors detected!</h3>
             {% endif %}
+            </br>
+            </br>
             </br>
             </br>
             <a href="{{ url_for('clear_app_settings') }}"><button type='button' class='btn btn-warning' id='b1'>Reset All Settings to Default!</button></a>

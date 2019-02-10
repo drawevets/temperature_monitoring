@@ -8,6 +8,7 @@ from flask import Flask, render_template, redirect, url_for
 import os
 import socket
 import subprocess
+import time
 
 lg = "web"
 base_dir = '/sys/bus/w1/devices/'
@@ -159,9 +160,16 @@ def current_temps():
                                         autorefresh_required = True,
                                         temp_data = temp_details)
 
+@app.route("/edit_sensor_alias")
+def edit_sensor_alias():
+    return "<html><h1>Not implemented yet</h1></br><a href=" + url_for('status') + ">Back to the status page.....</html>"
+
 
 @app.route("/status")
 def status():
+    sensor_aliases = None
+    no_sensors = 0
+    
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     if (level <= -100):
         level_perc = 0
@@ -174,9 +182,23 @@ def status():
     all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
     if all_sensors_list is not None:
         no_sensors = str(len(all_sensors_list))
-    else:
-        no_sensors = 0
-        
+        db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
+        if db_conn is None:
+            cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
+            clean_shutdown()
+        else:
+            cfuncs.write_to_log(lg, "   DB connection OK")
+
+        cursor = db_conn.cursor()
+        sensor_aliases = []
+        for sensor_id in all_sensors_list:
+            db_id, temp_sensor_alias, temp_offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_id, False)
+            sensor_aliases.append(temp_sensor_alias)
+        cursor.close()
+        db_conn.close()
+
+    all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
+    
     now = datetime.datetime.now()
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = cfuncs.get_local_ip_address("web")
@@ -207,7 +229,7 @@ def status():
                             level_perc=str(level_perc),
                             level=str(level),
                             no_sensors=no_sensors,
-                            sensors_list=all_sensors_list)
+                            sensors_list=all_sensor_info)
 
 
 @app.route("/onehour_chart")
