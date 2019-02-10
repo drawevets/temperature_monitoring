@@ -34,7 +34,7 @@
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <i class="fas fa-home fa-lg"></i><a class="navbar-brand" href="/">Pi Temperature Monitoring System</a>
+                <a class="navbar-brand" href="/"><i class="fas fa-home fa-lg"></i>PTMS</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -51,7 +51,7 @@
                 <a class="nav-item nav-link" href="{{ url_for('today_chart') }}">Today</a>
                 <a class="nav-item nav-link" href="{{ url_for('week_chart') }}">Week</a>
                 <a class="nav-item nav-link" href="{{ url_for('weekoverview_chart') }}">DailyStats</a>
-                <a class="nav-item nav-link" href="{{ url_for('current_temps') }}">Current</a>
+                <a class="nav-item nav-link" href="{{ url_for('current_temps') }}">Now</a>
                 <a class="nav-item nav-link" href="#"> </a>
                 <a class="nav-item nav-link" href="#"> </a>
                 <a class="nav-item nav-link" href="{{ url_for('status') }}"><i class="fas fa-cogs"></i>System Status</a>
@@ -84,7 +84,7 @@
                     <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
                 {% endif %}
                 {% if version %}
-                    </br></br></br><h5><small><i><p class="text-muted text-left">Temperature Monitoring System - {{ version }}</p></i></small></h5>
+            </br></br></br><h5><small><i><p class="text-muted text-left">Pi Temperature Monitoring System - {{ version }}</p></i></small></h5>
                 {% endif %}
             </div>
         </div>
