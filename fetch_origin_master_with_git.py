@@ -49,7 +49,7 @@ if __name__ == "__main__":
             change_file =  open("/home/steve/temperature_monitoring/last_change.txt", 'w+')
             now = datetime.datetime.now()
             log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
-            log_string = "Automatic update and restart - Last Change: " + log_date + " " + str(last_change_str[1])
+            log_string = "Automatic update and restart\n\nLast Change: " + log_date + " " + str(last_change_str[1])
             print(log_string)
             change_file.write(log_string + "\n")
             change_file.close()
