@@ -8,6 +8,7 @@ from pathlib import Path
 import platform
 import re
 import subprocess
+import time
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
 
