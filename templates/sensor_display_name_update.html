@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-7">
+            <form action="" method="post">
+                {{ form.csrf }}
+                <div class="input text">
+                    <table class="table table-bordered table-sm">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Sensor ID</th>
+                                <th>Current Display Name</th>
+                                <th>New Display Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ sensors_ids[0] }}</td>
+                                <td>{{ sensor_aliases[0] }}</td>
+                                <td>{{ form.new_name1 }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ sensors_ids[1] }}</td>
+                                <td>{{ sensor_aliases[1] }}</td>
+                                <td>{{ form.new_name2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ sensors_ids[2] }}</td>
+                                <td>{{ sensor_aliases[2] }}</td>
+                                <td>{{ form.new_name3 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="input submit">
+                    <input type="submit" value="Submit">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -63,12 +63,11 @@ sudo apt-get install mysql-server git git-extras python3-pip python3-setuptools 
 
 sudo rpi-update
 
-
 ##########################################################################################################
 #Python Extensions setup
 ##########################################################################################################
 
-sudo pip3 install flask mysqlclient
+sudo pip3 install flask wtforms mysqlclient
 
 sudo git clone https://github.com/drawevets/temperature_monitoring
 

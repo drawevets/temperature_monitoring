@@ -4,7 +4,8 @@ import common_functions as cfuncs
 import datetime
 import MySQLdb
 import glob
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request, flash
+from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
 import os
 import socket
 import subprocess
@@ -14,11 +15,70 @@ lg = "web"
 base_dir = '/sys/bus/w1/devices/'
 
 app = Flask(__name__)
+app.config.from_object(__name__)
+app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b9176a'
 
 #Example of charting: https://www.patricksoftwareblog.com/creating-charts-with-chart-js-in-a-flask-application/
 #
 #For Chart.js source goto link:
 #https://github.com/chartjs/Chart.js/releases/latest
+
+
+class SensorDisplayNameForm(Form):
+    new_name1 = TextField('Display Name:', validators=[validators.optional()])
+    new_name2 = TextField('Display Name:', validators=[validators.optional()])
+    new_name3 = TextField('Display Name:', validators=[validators.optional()])
+
+@app.route("/form", methods=['GET', 'POST'])
+def SensorDisplayNameUpdate():
+    form = SensorDisplayNameForm(request.form)
+    
+    print(form.errors)
+    if request.method == 'POST':
+        new_name1 = request.form['new_name1']
+        new_name2 = request.form['new_name2']
+        new_name3 = request.form['new_name3']
+        
+        if new_name1 != "":
+            print("new_name1 is NOT blank!")
+            
+        if new_name2 != "":
+            print("new_name2 is NOT blank!")
+
+        if new_name3 != "":
+            print("new_name3 is NOT blank!")
+        
+        print(new_name1)
+        print(new_name2)
+        print(new_name3)
+     
+        if form.validate():
+            print("Form validated OK")    
+        else:
+            print("Form NOT validated OK")
+    
+    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+    if all_sensors_list is not None:
+        no_sensors = str(len(all_sensors_list))
+        db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
+        if db_conn is None:
+            cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
+            clean_shutdown()
+        else:
+            cfuncs.write_to_log(lg, "   DB connection OK")
+
+        cursor = db_conn.cursor()
+        sensor_aliases = []
+        for sensor_id in all_sensors_list:
+            db_id, temp_sensor_alias, temp_offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_id, False)
+            sensor_aliases.append(temp_sensor_alias)
+        cursor.close()
+        db_conn.close()
+
+    all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
+    
+    return render_template('sensor_display_name_update.html', form=form, sensors_ids=all_sensors_list, sensor_aliases=sensor_aliases)
+
 
 @app.route("/")
 @app.route("/home")
