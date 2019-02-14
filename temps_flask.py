@@ -25,59 +25,67 @@ app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b9176a'
 
 
 class SensorDisplayNameForm(Form):
-    new_name1 = TextField('Display Name:', validators=[validators.optional()])
-    new_name2 = TextField('Display Name:', validators=[validators.optional()])
-    new_name3 = TextField('Display Name:', validators=[validators.optional()])
+    new_name1 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
+    new_name2 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
+    new_name3 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
 
-@app.route("/form", methods=['GET', 'POST'])
+
+@app.route("/updatesensornames", methods=['GET', 'POST'])
 def SensorDisplayNameUpdate():
     form = SensorDisplayNameForm(request.form)
     
-    print(form.errors)
+    #print(form.errors)
     if request.method == 'POST':
-        new_name1 = request.form['new_name1']
-        new_name2 = request.form['new_name2']
-        new_name3 = request.form['new_name3']
+        new_name1 = request.form['new_name1'].strip()
+        new_name2 = request.form['new_name2'].strip()
+        new_name3 = request.form['new_name3'].strip()
+
+        if new_name1 != "" or new_name2 != "" or new_name3 != "":
+            if form.validate():
+                cfuncs.write_to_log(lg, "   Form validated OK")
+                all_sensors_uid_list = cfuncs.find_all_temp_sensors_connected(lg)
+                newnames=[new_name1,new_name2,new_name3]
+                #print(newnames)
+                #print(all_sensors_uid_list)
+                all_sensor_name_info = list(zip(all_sensors_uid_list, newnames))
+                #print(all_sensor_name_info)
+                for sensor_uid, new_name in all_sensor_name_info:
+                    print("looking at: " + sensor_uid + " new_name: " + new_name)
+                    if new_name != "":
+                        #print("sensor_uid + "  " new_name  -  updating name in DB!")
+                        cfuncs.update_sensor_display_name(lg, sensor_uid, new_name)
+                return redirect(url_for('home'))
+            else:
+                print("Form NOT validated OK")
+
+        return redirect(url_for('SensorDisplayNameUpdate'))
+    else:
+        all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
+        if all_sensors_list is not None:
+            no_sensors = str(len(all_sensors_list))
+            db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
+            if db_conn is None:
+                cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
+                clean_shutdown()
+            else:
+                cfuncs.write_to_log(lg, "   DB connection OK")
+
+            cursor = db_conn.cursor()
+            sensor_aliases = []
+            for sensor_id in all_sensors_list:
+                db_id, temp_sensor_alias, temp_offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_id, False)
+                sensor_aliases.append(temp_sensor_alias)
+            cursor.close()
+            db_conn.close()
+
+        all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
+        vstring = cfuncs.app_version()
         
-        if new_name1 != "":
-            print("new_name1 is NOT blank!")
-            
-        if new_name2 != "":
-            print("new_name2 is NOT blank!")
-
-        if new_name3 != "":
-            print("new_name3 is NOT blank!")
-        
-        print(new_name1)
-        print(new_name2)
-        print(new_name3)
-     
-        if form.validate():
-            print("Form validated OK")    
-        else:
-            print("Form NOT validated OK")
-    
-    all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
-    if all_sensors_list is not None:
-        no_sensors = str(len(all_sensors_list))
-        db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
-        if db_conn is None:
-            cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
-            clean_shutdown()
-        else:
-            cfuncs.write_to_log(lg, "   DB connection OK")
-
-        cursor = db_conn.cursor()
-        sensor_aliases = []
-        for sensor_id in all_sensors_list:
-            db_id, temp_sensor_alias, temp_offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_id, False)
-            sensor_aliases.append(temp_sensor_alias)
-        cursor.close()
-        db_conn.close()
-
-    all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
-    
-    return render_template('sensor_display_name_update.html', form=form, sensors_ids=all_sensors_list, sensor_aliases=sensor_aliases)
+        return render_template('sensor_display_name_update.html', 
+                                form=form, 
+                                version = vstring, 
+                                sensors_ids=all_sensors_list, 
+                                sensor_aliases=sensor_aliases)
 
 
 @app.route("/")
@@ -219,6 +227,7 @@ def current_temps():
                                         title = 'Current Temps',
                                         autorefresh_required = True,
                                         temp_data = temp_details)
+
 
 @app.route("/edit_sensor_alias")
 def edit_sensor_alias():

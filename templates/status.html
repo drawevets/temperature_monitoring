@@ -159,7 +159,7 @@
                 <table class="table table-bordered table-sm">
                     <thead class="thead-light">
                         <tr>
-                            <th>Sensor ID</th>
+                            <th>Sensor UID</th>
                             <th>Display Name</th>
                         </tr>
                     </thead>
@@ -173,7 +173,7 @@
                     </tbody>
                 </table>
                 <div class="chng-name">
-                    <a href="{{ url_for('edit_sensor_alias') }}"><button type='button' class='btn btn-info' id='b1'>Change Sensor Display Names</button></a>
+                    <a href="{{ url_for('SensorDisplayNameUpdate') }}"><button type='button' class='btn btn-info' id='b1'>Change Sensor Display Names</button></a>
                 </div>
             {% else %}
                 <h3>No Temperature sensors detected!</h3>

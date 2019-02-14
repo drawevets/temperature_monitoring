@@ -15,7 +15,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.122 - Last updated: 09/02/19")
+    return ("v0.127 - Last updated: 14/02/19")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -367,6 +367,39 @@ def setup_db_connection(caller, host, db, user, passwd):
         db = None
     write_to_log(caller, "cf: << setup_db_connection()")
     return db
+
+
+def update_sensor_display_name(caller, sensor_uid, new_name):
+    write_to_log(caller, "cf: >> update_sensor_display_name()")
+    
+    result = False
+    #                                         Location      DB Name  DB Username   DB Passwd
+    tmp_db_conn = setup_db_connection(caller, "localhost",  "temps", "temps_admin", "admin",)
+
+    if tmp_db_conn is None:
+        write_to_log(caller, "cf:   DB connection failed!")
+        return result
+    else:
+        write_to_log(caller, "cf:   DB connection OK")
+
+    tmp_db_conn_cursor = tmp_db_conn.cursor()
+
+    try:
+        update_sql = "UPDATE temps.TEMP_SENSORS SET temp_sensor_alias = '" + new_name + "' WHERE temp_sensor_id='" + sensor_uid + "'"
+        write_to_log(caller, "cf:   "+ update_sql)
+        tmp_db_conn_cursor.execute(update_sql)
+        tmp_db_conn.commit()
+        write_to_log(caller, "cf:   updated sensor display name for " + sensor_uid)
+        result = True
+    except:
+        tmp_db_conn.rollback()
+        write_to_log(caller, "cf:   sensor name update failed for " + sensor_uid + "!!")
+
+    tmp_db_conn_cursor.close()
+    tmp_db_conn.close()
+
+    write_to_log(caller, "cf: << update_sensor_display_name()")
+    return result
 
 
 def write_to_log(caller, text_to_write):
