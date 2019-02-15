@@ -45,18 +45,18 @@
                 </div>
                 <!-- Navbar Right Side -->
                 <div class="navbar-nav">
-                <a class="nav-item nav-link" href="{{ url_for('onehour_chart') }}">1hr</a>
-                <a class="nav-item nav-link" href="{{ url_for('fourhour_chart') }}">4hr</a>
-                <a class="nav-item nav-link" href="{{ url_for('twentyfourhour_chart') }}">24hr</a>
-                <a class="nav-item nav-link" href="{{ url_for('today_chart') }}">Today</a>
-                <a class="nav-item nav-link" href="{{ url_for('week_chart') }}">Week</a>
-                <a class="nav-item nav-link" href="{{ url_for('weekoverview_chart') }}">DailyStats</a>
-                <a class="nav-item nav-link" href="{{ url_for('current_temps') }}">Now</a>
-                <a class="nav-item nav-link" href="#"> </a>
-                <a class="nav-item nav-link" href="#"> </a>
-                <a class="nav-item nav-link" href="{{ url_for('status') }}"><i class="fas fa-cogs"></i>System Status</a>
+                    <a class="nav-item nav-link" href="{{ url_for('onehour_chart') }}"><i class="fas fa-chart-line fa-lg"></i>1hr</a>
+                    <a class="nav-item nav-link" href="{{ url_for('fourhour_chart') }}">4hr</a>
+                    <a class="nav-item nav-link" href="{{ url_for('twentyfourhour_chart') }}">24hr</a>
+                    <a class="nav-item nav-link" href="{{ url_for('today_chart') }}">Today</a>
+                    <a class="nav-item nav-link" href="{{ url_for('week_chart') }}">Week</a>
+                    <a class="nav-item nav-link" href="#"> </a>
+                    <a class="nav-item nav-link" href="{{ url_for('weekoverview_chart') }}"><i class="far fa-chart-bar fa-lg"></i>DailyStats</a>
+                    <a class="nav-item nav-link" href="{{ url_for('current_temps') }}"><i class="fas fa-columns"></i>Now</a>
+                    <a class="nav-item nav-link" href="#"> </a>
+                    <a class="nav-item nav-link" href="{{ url_for('status') }}"><i class="fas fa-cogs fa-lg"></i>System Status</a>
+                </div>
             </div>
-          </div>
         </div>
       </nav>
     </header>
@@ -84,7 +84,9 @@
                     <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
                 {% endif %}
                 {% if version %}
-            </br></br></br><small><i><p class="text-muted text-left">Pi Temperature Monitoring System - {{ version }}</p></i></small>
+                    <div class="version">
+                    </br></br></br></br><small><i><p class="text-muted text-left">Pi Temperature Monitoring System - {{ version }}</p></i></small>
+                    </div>
                 {% endif %}
             </div>
         </div>

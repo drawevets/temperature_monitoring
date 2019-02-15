@@ -9,11 +9,22 @@ h1, h3, h4, h5, h6 {
 }
 
 h2 {
-  color: #191919;
+  /*color: #191919;*/
+
+  font-variant: small-caps;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  border-bottom: 2px solid #020887;
+  color: #020887;
 }
 
 h3 {
   color: #101010;
+}
+
+.version .text-muted{
+    color: #9f9f9f;
+    border-top: 1px solid #727272;
 }
 
 /* Current Temps card colouring */
@@ -72,8 +83,9 @@ h3 {
 
 }
 
-.fa-cogs{
-
+.fa-cogs,
+.fa-chart-line,
+.fa-columns{
     font-weight: 900;
     padding: 0px 5px;
     color: #cbd5db;
@@ -87,8 +99,13 @@ h3 {
 .fa-laptop,
 .fa-database,
 .fa-wifi,
-.fa-temperature-low{
+.fa-temperature-low,
+.fa-edit{
     color: #444444;
+}
+
+.fa-chart-bar {
+    padding: 0px 2px;
 }
 
 .btn-primary:hover {
@@ -120,7 +137,7 @@ h3 {
     color: #cbd5db;
 } 
 
-.current_temps .table {
+.update_sensor_names .table {
     text-align: center;
 }
 
