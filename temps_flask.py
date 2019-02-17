@@ -169,14 +169,13 @@ def check_for_updates():
     if result is None:
         return redirect(url_for('status'))
     else:
-        return redirect(url_for('update_done', result=result))
+        return redirect(url_for('update_done'))
 
 
 @app.route("/update_done")
 def update_done():
     cfuncs.write_to_last_change_file(lg, "Restart after user requested a software  update")
-    #os.system("/sbin/shutdown -r 0")
-    print(result)
+    os.system("/sbin/shutdown -r 0")
     return ("<html><h2>Software updated!</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>")
     
