@@ -19,21 +19,20 @@ gitDir = "/home/steve/temperature_monitoring/"
 print("*********** Checking for code update **************")
 
 
-print("Fetching most recent code from source..." + workingDir)
+print("Fetching most recent code from source..." + gitDir)
 
 # Fetch most up to date version of code.
 #p = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "fetch", "origin", "master", _out=ProcessFetch, _out_bufsize=0, _tty_in=True)               
-p = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "fetch", "origin", "master", _out_bufsize=0, _tty_in=True)               
+p = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "fetch", "origin", "master", _out_bufsize=0, _tty_in=True)               
 print(p)
 print("Fetch complete.")
 time.sleep(2)
-print("Checking status for " + workingDir + "...")
-statusCheck = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "status")
+print("Checking status for " + gitDir + "...")
+statusCheck = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "status")
 print(statusCheck)
 if "Your branch is up-to-date" in statusCheck:
     print("Status check passes.")
     print("Code up to date.")
-    return False
 else:
     print("Code update available.")
     print("Resetting code...")
