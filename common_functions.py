@@ -371,7 +371,6 @@ def setup_db_connection(caller, host, db, user, passwd):
     write_to_log(caller, "cf: << setup_db_connection()")
     return db
 
-
 def update_sensor_display_name(caller, sensor_uid, new_name):
     write_to_log(caller, "cf: >> update_sensor_display_name()")
     

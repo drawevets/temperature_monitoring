@@ -249,6 +249,20 @@ def current_temps():
 def edit_sensor_alias():
     return "<html><h1>Not implemented yet</h1></br><a href=" + url_for('status') + ">Back to the status page.....</html>"
 
+@app.route("/restart_now")
+def restart_now():
+    cfuncs.write_to_last_change_file(lg, "User requested restart")
+    os.system("/sbin/shutdown -r 0")
+    return ("<h2>The system will now restarting......</h2></br></br><h3><a href=" + 
+    url_for('home') + ">Reload the home page.....</a></h3></html>") 
+
+
+@app.route("/shutdown")
+def shutdown():
+    cfuncs.write_to_last_change_file(lg, "User requested shutdown")
+    os.system("/sbin/shutdown 0")
+    return ("<h2>The system will now shutdown......</h2></html>") 
+
 
 @app.route("/status")
 def status():

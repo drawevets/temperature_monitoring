@@ -212,7 +212,7 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
     settings = [('sensor_polling_freq', '600'),
                 ('write_to_logfile', 'true'),
                 ('start_up_status_email', 'true'),
-                ('first_read_settle_time', '15')]
+                ('first_read_settle_time', '10')]
     
     no_of_settings = len(settings)
     settings_added = 0
@@ -368,14 +368,24 @@ def do_main():
         network_status(False)
 
     ip_address = cfuncs.get_local_ip_address(lg)
-    cfuncs.write_to_log(lg, "------------------------    Database Connection OK   -----------------------")
+    cfuncs.write_to_log(lg, "------------------------   IS Database Connection OK?   -----------------------")
 
-    db_conn = cfuncs.setup_db_connection(lg, "localhost", database_name, database_user_name, database_password)
-    if db_conn is None:
-        cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
-        clean_shutdown()
-    else:
-        cfuncs.write_to_log(lg, "   DB connection OK")
+    db_conn_max_retries = 5
+    db_conn_count = 0
+    while True:
+        db_conn = cfuncs.setup_db_connection(lg, "localhost", database_name, database_user_name, database_password)
+        if db_conn is None:
+            cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
+            if db_conn_count < db_conn_max_retries:
+                db_conn_count += 1
+                time.sleep(3)
+                cfuncs.write_to_log(lg, "   Trying the DB connect again(" + str(db_conn_count) + ")")
+                continue
+            else:
+                clean_shutdown()
+        else:
+            cfuncs.write_to_log(lg, "   DB connection OK")
+            break;
 
     cursor = db_conn.cursor()
     Global_db_conn = db_conn
