@@ -322,8 +322,8 @@ def read_temp_raw(caller, sensor_id):
     return lines
 
 
-def reset_setting_db_table_to_defaults(caller):
-    write_to_log(caller, "cf: >> reset_setting_db_table_to_defaults()")
+def reset_db_table(caller, table_to_reset):
+    write_to_log(caller, "cf: >> reset_db_table()")
     
     result = False
     
@@ -338,14 +338,12 @@ def reset_setting_db_table_to_defaults(caller):
 
     tmp_db_conn_cursor = tmp_db_conn.cursor()
 
-    db_table_to_be_dropped = "TEMP_APP_SETTINGS"
-
-    check = check_table_exists(caller, tmp_db_conn_cursor, db_table_to_be_dropped)
+    check = check_table_exists(caller, tmp_db_conn_cursor, table_to_reset)
     if check is not None:
-        write_to_log(caller, "cf:   Removing " + db_table_to_be_dropped + " table")
-        tmp_db_conn_cursor.execute("DROP TABLE IF EXISTS " + db_table_to_be_dropped)
+        write_to_log(caller, "cf:   Truncating " + table_to_reset + " table")
+        tmp_db_conn_cursor.execute("TRUNCATE TABLE " + table_to_reset)
         tmp_db_conn.commit()
-        write_to_log(caller, "cf:   Table removed OK")
+        write_to_log(caller, "cf:   Table truncated OK")
         result = True
     else:
         write_to_log(caller, "cf:   Table does not exist!")
@@ -353,7 +351,7 @@ def reset_setting_db_table_to_defaults(caller):
     tmp_db_conn_cursor.close()
     tmp_db_conn.close()
 
-    write_to_log(caller, "cf: << reset_setting_db_table_to_defaults()")
+    write_to_log(caller, "cf: << reset_db_table()")
     return result
 
 

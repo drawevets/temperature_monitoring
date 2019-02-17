@@ -182,7 +182,16 @@
             </br>
             </br>
             </br>
+        </div>
+    </div>
+    <h4><strong>The following operations will result in a system restart</strong></h4>
+    <div class="row">
+        <div class="col-sm-4">
             <a href="{{ url_for('clear_app_settings') }}"><button type='button' class='btn btn-warning' id='b1'>Reset All Settings to Default!</button></a>
+        </div>
+
+        <div class="col-sm-4">
+            <a href="{{ url_for('clear_temp_readings') }}"><button type='button' class='btn btn-danger' id='b1'>Clear <b>ALL</b> Temperature Readings!</button></a>
         </div>
     </div>
 </div>

@@ -172,8 +172,7 @@ def clear_log_archive():
 
 @app.route("/clear_app_settings")
 def clear_app_settings():
-    result = cfuncs.reset_setting_db_table_to_defaults(lg)
-    
+    result = cfuncs.reset_db_table(lg, "TEMP_APP_SETTINGS")
     if result is False:
         return redirect(url_for('status'))
     else:
@@ -183,8 +182,25 @@ def clear_app_settings():
 @app.route("/cleared_app_settings")
 def cleared_app_settings():
     cfuncs.write_to_last_change_file(lg, "Restart after user requested all settings reset to default")
-    os.system("/sbin/shutdown -r 0")
+    #os.system("/sbin/shutdown -r 0")
     return ("<html><h2>Settings reset to defaults</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
+    url_for('home') + ">Reload the home page.....</a></h3></html>")
+
+
+@app.route("/clear_temp_readings")
+def clear_temp_readings():
+    result = cfuncs.reset_db_table(lg, "TEMP_READINGS")
+    if result is False:
+        return redirect(url_for('status'))
+    else:
+        return redirect(url_for('cleared_temp_readings'))
+
+
+@app.route("/cleared_temp_readings")
+def cleared_temp_readings():
+    cfuncs.write_to_last_change_file(lg, "Restart after temp readings cleared")
+    #os.system("/sbin/shutdown -r 0")
+    return ("<html><h2>Temperature readings cleared</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>")
 
 
