@@ -169,7 +169,7 @@ def check_for_updates():
     if result is None:
         return redirect(url_for('status'))
     else:
-        return redirect(url_for('update_done'), result=result)
+        return redirect(url_for('update_done', result=result))
 
 
 @app.route("/update_done")
