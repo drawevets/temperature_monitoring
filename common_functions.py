@@ -190,6 +190,11 @@ def get_filesystem_stats(caller):
     
 
 def get_last_temperature_reading_from_db(caller, db_cursor, sensor_id):
+    reading_date = None
+    temperature = None
+    temp_sensor_alias = None
+    temp_sensor_id = None
+    
     write_to_log(caller, "cf: >> get_last_temperature_reading_from_db()")
     query = """SELECT CONCAT(LPAD(DAY(TEMP_READINGS.date_added),2,'0'), '/',LPAD(MONTH(TEMP_READINGS.date_added),2,'0'), '/',YEAR(TEMP_READINGS.date_added),' ',
                              LPAD(HOUR(TEMP_READINGS.date_added),2,'0'),':',LPAD(MINUTE(TEMP_READINGS.date_added),2,'0')) as time_added, 
