@@ -20,7 +20,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.137 - Last updated: 14/02/19")
+    return ("v0.138 - Last updated: 14/02/19")
 
 
 def check_for_updates(caller):
@@ -54,7 +54,7 @@ def check_for_updates(caller):
             change_file =  open("/home/steve/temperature_monitoring/last_change.txt", 'w+')
             now = datetime.datetime.now()
             log_date = str(now.day).zfill(2) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2) + " "
-            log_string = "   Automatic update and restart\n\n   Last Change:  " + log_date + " - " + str(last_change_str[1])
+            log_string = "   Automatic update and restart\n\n   Last Change:\n\n             " + log_date + " - " + str(last_change_str[1])
             write_to_log(caller, "cf: " + log_string)
             change_file.write(log_string + "\n")
             change_file.close()

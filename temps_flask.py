@@ -176,6 +176,7 @@ def check_for_updates():
 def update_done():
     cfuncs.write_to_last_change_file(lg, "Restart after user requested a software  update")
     #os.system("/sbin/shutdown -r 0")
+    print(result)
     return ("<html><h2>Software updated!</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>")
     
