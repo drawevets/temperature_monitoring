@@ -15,9 +15,7 @@ import os, sys
 
 gitDir = "/home/steve/temperature_monitoring/"
 
-
 print("*********** Checking for code update **************")
-
 
 print("Fetching most recent code from source..." + gitDir)
 
