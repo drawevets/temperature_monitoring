@@ -25,13 +25,9 @@ def app_version():
 
 def check_for_updates(caller):
     gitDir = "/home/steve/temperature_monitoring/"
-
     write_to_log(caller, "cf: *********** Checking for code update **************")
-
     write_to_log(caller, "cf: Fetching most recent code from source..." + gitDir)
-
     # Fetch most up to date version of code.
-    #p = git("--git-dir=" + workingDir + ".git/", "--work-tree=" + workingDir, "fetch", "origin", "master", _out=ProcessFetch, _out_bufsize=0, _tty_in=True)               
     p = git("--git-dir=" + gitDir + ".git/", "--work-tree=" + gitDir, "fetch", "origin", "master", _out_bufsize=0, _tty_in=True)               
     write_to_log(caller, str(p))
     write_to_log(caller, "cf: Fetch complete.")
@@ -62,8 +58,7 @@ def check_for_updates(caller):
             write_to_log(caller, "cf: Failed to write to /home/steve/temperature_monitoring/last_change.txt")
         return str(last_change_str[1])
         write_to_log(caller, "cf: Check complete.....reseting now....")
-        #os.system("/sbin/shutdown -r 0")
-
+        os.system("/sbin/shutdown -r 0")
 
 
 def check_table_exists(caller, db_cursor, table_name):
@@ -427,6 +422,22 @@ def setup_db_connection(caller, host, db, user, passwd):
     write_to_log(caller, "cf: << setup_db_connection()")
     return db
 
+
+def settings_db_to_dictionary(caller, db_cursor):
+    write_to_log(caller, "cf: >> settings_db_to_dictionary")
+    write_to_log(caller, "cf:      Fetching settings from DB --> Dictionary")
+    dictionary = {}
+    
+    query = "SELECT name, value FROM TEMP_APP_SETTINGS"
+    db_cursor.execute(query)
+    
+    for row in db_cursor.fetchall():
+        write_to_log(caller, "cf:       Setting: " + str(row[0]) + " = " + str(row[1]))
+        dictionary[str(row[0])] = str(row[1])
+    write_to_log(caller, "cf: << settings_db_to_dictionary")
+    return dictionary
+
+
 def update_sensor_display_name(caller, sensor_uid, new_name):
     write_to_log(caller, "cf: >> update_sensor_display_name()")
     
@@ -457,6 +468,39 @@ def update_sensor_display_name(caller, sensor_uid, new_name):
     tmp_db_conn.close()
 
     write_to_log(caller, "cf: << update_sensor_display_name()")
+    return result
+
+
+def update_setting(caller, setting, new_value):
+    write_to_log(caller, "cf: >> update_setting()")
+    
+    result = False
+    #                                         Location      DB Name  DB Username   DB Passwd
+    tmp_db_conn = setup_db_connection(caller, "localhost",  "temps", "temps_admin", "admin",)
+
+    if tmp_db_conn is None:
+        write_to_log(caller, "cf:   DB connection failed!")
+        return result
+    else:
+        write_to_log(caller, "cf:   DB connection OK")
+
+    tmp_db_conn_cursor = tmp_db_conn.cursor()
+
+    try:
+        update_sql = "UPDATE temps.TEMP_APP_SETTINGS SET value = '" + new_value + "' WHERE name='" + setting + "'"
+        write_to_log(caller, "cf:   "+ update_sql)
+        tmp_db_conn_cursor.execute(update_sql)
+        tmp_db_conn.commit()
+        write_to_log(caller, "cf:   updated setting for " + setting)
+        result = True
+    except:
+        tmp_db_conn.rollback()
+        write_to_log(caller, "cf:   setting update failed for " + setting + "!!")
+
+    tmp_db_conn_cursor.close()
+    tmp_db_conn.close()
+
+    write_to_log(caller, "cf: << update_setting()")
     return result
 
 

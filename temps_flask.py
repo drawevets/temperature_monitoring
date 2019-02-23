@@ -5,7 +5,7 @@ import datetime
 import MySQLdb
 import glob
 from flask import Flask, render_template, redirect, url_for, request, flash
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from wtforms import Form, IntegerField, BooleanField, TextField, TextAreaField, validators, StringField, SubmitField
 import os
 import socket
 import subprocess
@@ -265,6 +265,7 @@ def current_temps():
 def edit_sensor_alias():
     return "<html><h1>Not implemented yet</h1></br><a href=" + url_for('status') + ">Back to the status page.....</html>"
 
+
 @app.route("/restart_now")
 def restart_now():
     cfuncs.write_to_last_change_file(lg, "User requested restart")
@@ -326,8 +327,8 @@ def status():
 
     return render_template('status.html',
                             version=vstring,
-                            page_heading='System Status',
-                            title='Status',
+                            page_heading='System Information',
+                            title='Sys Info',
                             os = os, 
                             architecture = architecture,
                             oskernel = oskernel,
@@ -347,6 +348,106 @@ def status():
                             level=str(level),
                             no_sensors=no_sensors,
                             sensors_list=all_sensor_info)
+
+
+class SettingsUpdateForm(Form):
+    new_value0 = IntegerField('Temp Sensor Reading Frequency (s)', validators=[validators.optional(), validators.NumberRange(min=300, max=1800)])
+    new_value1 = BooleanField('Logfile Enabled (setting not used!)', validators=[validators.optional()])
+    new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Length(min=6, max=35)])
+    new_value3 = BooleanField('Send Start up email', default="checked", validators=[validators.optional()])
+    new_value4 = IntegerField('Webpage Auto Refresh Time (s)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
+    new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
+
+
+@app.route("/utils", methods=['GET', 'POST'])
+def utils():
+    form = SettingsUpdateForm(request.form)
+    setting_name = []
+    setting_value = []
+
+    #print(form.errors)
+    
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
+    if db_conn is None:
+        cfuncs.write_to_log(lg, "ERROR  - DB connection failed!")
+        clean_shutdown()
+    else:
+        cfuncs.write_to_log(lg, "   DB connection OK")
+
+    cursor = db_conn.cursor()
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+
+    setting_name.append('sensor_polling_freq')
+    setting_name.append('write_to_logfile')
+    setting_name.append('start_up_email_address')
+    setting_name.append('start_up_status_email')
+    setting_name.append('webpage_autorefresh_time')
+    setting_name.append('first_read_settle_time')
+
+    setting_value.append(settings_dict['sensor_polling_freq'])
+    setting_value.append(settings_dict['write_to_logfile'])
+    if settings_dict['start_up_email_address'] == 'not_set':
+        setting_value.append("Internal Default")
+    else:
+        setting_value.append(settings_dict['start_up_email_address'])
+    setting_value.append(settings_dict['start_up_status_email'])
+    setting_value.append(settings_dict['webpage_autorefresh_time'])
+    setting_value.append(settings_dict['first_read_settle_time'])
+    
+    cursor.close()
+    db_conn.close()      
+    
+    if request.method == 'POST':
+        sensor_polling_freq = request.form['new_value0']
+        write_to_logfile = str(form.new_value1.data)
+        start_up_email_address = str(form.new_value2.data).strip()
+        start_up_status_email = str(form.new_value3.data)
+        webpage_autorefresh_time = request.form['new_value4'].strip()
+        first_read_settle_time = request.form['new_value5']
+
+        #print("sensor_polling_freq: " + sensor_polling_freq)
+        #print("write_to_logfile: " + write_to_logfile)
+        #print("start_up_email_address: " + start_up_email_address)
+        #print("start_up_status_email: " + start_up_status_email)
+        #print("webpage_autorefresh_time: " + webpage_autorefresh_time)
+        #print("first_read_settle_time: " + first_read_settle_time)
+       
+        if form.validate():
+            cfuncs.write_to_log(lg, "   Form validated OK")
+            if sensor_polling_freq != '':
+               cfuncs.update_setting(lg, 'sensor_polling_freq', sensor_polling_freq)
+                   
+            if write_to_logfile != settings_dict['write_to_logfile']:
+                cfuncs.update_setting(lg, 'write_to_logfile', write_to_logfile)
+
+            if start_up_email_address != '':
+                cfuncs.update_setting(lg, 'start_up_email_address', start_up_email_address)
+            
+            if start_up_status_email != settings_dict['start_up_status_email']:
+                cfuncs.update_setting(lg, 'start_up_status_email', start_up_status_email)
+
+            if webpage_autorefresh_time != '':
+                cfuncs.update_setting(lg, 'webpage_autorefresh_time', webpage_autorefresh_time)
+                
+            if first_read_settle_time != '':
+                cfuncs.update_setting(lg, 'first_read_settle_time', first_read_settle_time)
+
+        else:
+            print("Form NOT validated OK")
+        
+        return redirect(url_for('utils'))
+    else:
+
+        vstring = cfuncs.app_version()
+        
+        return render_template('utils.html', 
+                                form=form,
+                                page_heading = 'System Utils',
+                                version = vstring,
+                                title = "Utils", 
+                                setting_name = setting_name, 
+                                setting_value = setting_value)
 
 
 @app.route("/onehour_chart")

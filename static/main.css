@@ -83,14 +83,17 @@ h3 {
 
 }
 
-.fa-cogs,
+.fa-tools,
+.fa-info,
 .fa-chart-line,
 .fa-columns{
     font-weight: 900;
     padding: 0px 5px;
     color: #cbd5db;
 }
-.fa-cogs:hover{
+
+.fa-tools:hover,
+.fa-info:hover{
     font-weight: 900;
     padding: 0px 5px;
     color: #ffffff;
@@ -102,6 +105,14 @@ h3 {
 .fa-temperature-low,
 .fa-edit{
     color: #444444;
+}
+
+.fa-ambulance{
+    color: #aa0000;
+}
+
+.fa-exclamation-triangle{
+    color: #ee0000;
 }
 
 .fa-chart-bar {
@@ -138,6 +149,10 @@ h3 {
 } 
 
 .update_sensor_names .table {
+    text-align: center;
+}
+
+.update_settings .table {
     text-align: center;
 }
 

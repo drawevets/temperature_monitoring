@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- import plugin script -->
+<script src='static/Chart.min.js'></script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10">
+            <form action="" method="post">
+                {{ form.csrf }}
+                <div class="input text">
+                    <h3><i class="fas fa-edit"></i> Application Settings</h3></br>
+                    <div class="update_settings">
+                        <p><i><b>NOTE:</b> Currently, settings changes only take effect after a system restart!</i></p>
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Setting</th>
+                                    <th>Current Value</th>
+                                    <th>New Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ form.new_value0.label }}</td>
+                                    <td>{{ setting_value[0] }}</td>
+                                    <td>{{ form.new_value0 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>{{ form.new_value1.label }}</td>
+                                    <td>{{ setting_value[1] }}</td>
+                                    <td>{{ form.new_value1 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>{{ form.new_value2.label }}</td>
+                                    <td>{{ setting_value[2] }}</td>
+                                    <td>{{ form.new_value2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>{{ form.new_value3.label }}</td>
+                                    <td>{{ setting_value[3] }}</td>
+                                    <td>{{ form.new_value3 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>{{ form.new_value4.label }}</td>
+                                    <td>{{ setting_value[4] }}</td>
+                                    <td>{{ form.new_value4 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>{{ form.new_value5.label }}</td>
+                                    <td>{{ setting_value[5] }}</td>
+                                    <td>{{ form.new_value5 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="input submit">
+                            <input type="submit" value="Save Settings">
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+    </br></br></br>
+    <h3><i class="fas fa-edit"></i> Temperature Sensor Display Names</h3></br>
+    <div class="row">
+        <div class="col-sm-4">
+                <a href="{{ url_for('SensorDisplayNameUpdate') }}"><button type='button' class='btn btn-info' id='b1'>Change Sensor Display Names</button></a>
+        </div>
+    </div>
+    </br></br></br></br></br>
+    <h3><i class="fas fa-ambulance"></i> System Reset and Update Operations</h3></br>
+    <p><strong>The following operations will result in an automatic system restart!</strong></p>
+    <div class="row">
+        <div class="col-sm-4">
+            <a href="{{ url_for('clear_app_settings') }}"><button type='button' class='btn btn-warning' id='b1'>Reset All Settings to Default!</button></a>
+        </div>
+
+        <div class="col-sm-4">
+            <a href="{{ url_for('clear_temp_readings') }}"><button type='button' class='btn btn-danger' id='b1'>Clear <b>ALL</b> Temperature Readings!</button></a>
+        </div>
+    </div>
+    </br></br>
+    <div class="row">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-4">
+            <a href="{{ url_for('check_for_updates') }}"><button type='button' class='btn btn-warning' id='b1'>Check for Software Updates <b>NOW!</b></button></a>
+        </div>
+    </div>
+    </br></br></br></br>
+    <h3><i class="fas fa-exclamation-triangle"></i> System Reboot and Shutdown <i class="fas fa-exclamation-triangle"></i></h3></br>
+    <div class="row">
+        <div class="col-sm-3">
+            <a href="{{ url_for('restart_now') }}"><button type='button' class='btn btn-warning' id='b1'>Reboot NOW!</button></a>
+        </div>
+
+        <div class="col-sm-4">
+            <a href="{{ url_for('shutdown') }}"><button type='button' class='btn btn-danger' id='b1'>System SHUTDOWN</button></a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

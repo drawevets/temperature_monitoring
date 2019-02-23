@@ -28,7 +28,7 @@ log_to_console = True
 
 email_user = email_config.email_details['sender_addr']
 email_passwd = email_config.email_details['sender_passwd']
-email_recipient_addr = email_config.email_details['recipient']
+gbl_email_recipient_addr = email_config.email_details['recipient']
 
 lg = "temps"
 
@@ -179,7 +179,7 @@ def manage_settings_db_and_dict_stuff(db_conn, db_cursor):
         cfuncs.write_to_log(lg, "   " + str(added) + " settings added")
 
     global Global_dict
-    Global_dict = settings_db_to_dictionary(db_cursor)
+    Global_dict = cfuncs.settings_db_to_dictionary(lg, db_cursor)
     
     cfuncs.write_to_log(lg, "<< manage_settings_db_stuff()")
     return None
@@ -210,8 +210,10 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
     cfuncs.write_to_log(lg, ">> check_settings_for_defaults_and_updates()")
     
     settings = [('sensor_polling_freq', '600'),
-                ('write_to_logfile', 'true'),
-                ('start_up_status_email', 'true'),
+                ('write_to_logfile', 'True'),
+                ('start_up_email_address', 'not_set'),
+                ('start_up_status_email', 'True'),
+                ('webpage_autorefresh_time', '60'),
                 ('first_read_settle_time', '10')]
     
     no_of_settings = len(settings)
@@ -239,21 +241,6 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
             
     cfuncs.write_to_log(lg, "<< check_settings_for_defaults_and_updates()")    
     return settings_existing, settings_added
-
-    
-def settings_db_to_dictionary(db_cursor):
-    cfuncs.write_to_log(lg, ">> settings_db_to_dictionary")
-    cfuncs.write_to_log(lg, "     Fetching settings from DB --> Dictionary")
-    dictionary = {}
-    
-    query = "SELECT name, value FROM TEMP_APP_SETTINGS"
-    db_cursor.execute(query)
-    
-    for row in db_cursor.fetchall():
-        cfuncs.write_to_log(lg, "       Setting: " + str(row[0]) + " = " + str(row[1]))
-        dictionary[str(row[0])] = str(row[1])
-    cfuncs.write_to_log(lg, "<< settings_db_to_dictionary")
-    return dictionary
 
 
 def write_temp_reading_to_db(db_conn, db_cursor, db_sensor_id, temp_reading):
@@ -434,12 +421,19 @@ def do_main():
     else:
         expected_sensor_count(False)
 
+    if Global_dict['start_up_email_address'] != "not_set":
+        email_recipient_addr = Global_dict['start_up_email_address']
+        cfuncs.write_to_log(lg, "   Startup email address from settings DB: " + email_recipient_addr)
+    else:
+        email_recipient_addr = gbl_email_recipient_addr
+        cfuncs.write_to_log(lg, "   Startup email address from preset file: " + email_recipient_addr)
+        
     send_start_up_status_email = Global_dict['start_up_status_email']
     #Override for start emails!
-    send_start_up_status_email = "true"
+    #send_start_up_status_email = "True"
     
     if email_user is not None and email_passwd is not None and email_recipient_addr is not None:
-        if send_start_up_status_email == "true":
+        if send_start_up_status_email == "True":
             if last_change_string is None:
                 last_change_string = "User restart or other unplanned restart"
             send_email(email_user, email_passwd, email_recipient_addr,  
