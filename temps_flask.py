@@ -270,7 +270,7 @@ def edit_sensor_alias():
 def restart_now():
     cfuncs.write_to_last_change_file(lg, "User requested restart")
     os.system("/sbin/shutdown -r 0")
-    return ("<h2>The system will now restarting......</h2></br></br><h3><a href=" + 
+    return ("<h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>") 
 
 
@@ -353,11 +353,10 @@ def status():
 class SettingsUpdateForm(Form):
     new_value0 = IntegerField('Temp Sensor Reading Frequency (s)', validators=[validators.optional(), validators.NumberRange(min=300, max=1800)])
     new_value1 = BooleanField('Logfile Enabled (setting not used!)', validators=[validators.optional()])
-    new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Length(min=6, max=35)])
-    new_value3 = BooleanField('Send Start up email', default="checked", validators=[validators.optional()])
+    new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Email()])
+    new_value3 = BooleanField('Send Start up email', validators=[validators.optional()])
     new_value4 = IntegerField('Webpage Auto Refresh Time (s)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
-
 
 @app.route("/utils", methods=['GET', 'POST'])
 def utils():
@@ -396,7 +395,7 @@ def utils():
     setting_value.append(settings_dict['first_read_settle_time'])
     
     cursor.close()
-    db_conn.close()      
+    db_conn.close()
     
     if request.method == 'POST':
         sensor_polling_freq = request.form['new_value0']
@@ -439,15 +438,26 @@ def utils():
         return redirect(url_for('utils'))
     else:
 
+        if setting_value[1] == "True":
+            temp1 = True
+        else:
+            temp1 = False
+            
+        if setting_value[3] == "True":
+            temp3 = True
+        else:
+            temp3 = False
+            
         vstring = cfuncs.app_version()
-        
+            
         return render_template('utils.html', 
                                 form=form,
                                 page_heading = 'System Utils',
                                 version = vstring,
                                 title = "Utils", 
                                 setting_name = setting_name, 
-                                setting_value = setting_value)
+                                setting_value = setting_value,
+                                tmp1 = temp1, tmp3 = temp3)
 
 
 @app.route("/onehour_chart")

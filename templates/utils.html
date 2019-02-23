@@ -29,7 +29,7 @@
                                 <tr>
                                     <td>{{ form.new_value1.label }}</td>
                                     <td>{{ setting_value[1] }}</td>
-                                    <td>{{ form.new_value1 }}</td>
+                                    <td>{{ form.new_value1(checked=tmp1) }}</td>
                                 </tr>
                                 <tr>
                                     <td>{{ form.new_value2.label }}</td>
@@ -39,7 +39,7 @@
                                 <tr>
                                     <td>{{ form.new_value3.label }}</td>
                                     <td>{{ setting_value[3] }}</td>
-                                    <td>{{ form.new_value3 }}</td>
+                                    <td>{{ form.new_value3(checked=tmp3) }}</td>
                                 </tr>
                                 <tr>
                                     <td>{{ form.new_value4.label }}</td>
@@ -70,7 +70,7 @@
         </div>
     </div>
     </br></br></br>
-    <h3><i class="fas fa-edit"></i> Temperature Sensor Display Names</h3></br>
+    <h3><i class="fas fa-temperature-low"></i>Temperature Sensor Display Names</h3></br>
     <div class="row">
         <div class="col-sm-4">
                 <a href="{{ url_for('SensorDisplayNameUpdate') }}"><button type='button' class='btn btn-info' id='b1'>Change Sensor Display Names</button></a>

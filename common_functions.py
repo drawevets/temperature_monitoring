@@ -20,7 +20,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.139 - Last updated: 17/02/19")
+    return ("v0.143 - Last updated: 23/02/19")
 
 
 def check_for_updates(caller):

@@ -84,7 +84,7 @@ h3 {
 }
 
 .fa-tools,
-.fa-info,
+.fa-desktop,
 .fa-chart-line,
 .fa-columns{
     font-weight: 900;
@@ -93,7 +93,7 @@ h3 {
 }
 
 .fa-tools:hover,
-.fa-info:hover{
+.fa-desktop:hover{
     font-weight: 900;
     padding: 0px 5px;
     color: #ffffff;
