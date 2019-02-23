@@ -319,6 +319,7 @@ def status():
     ip_address = cfuncs.get_local_ip_address("web")
     vstring = cfuncs.app_version()
     os, architecture, oskernel, firmwareversion, uptime = cfuncs.get_system_information()
+    cputemp = cfuncs.get_cpu_temp(lg)
     total_capacity, free_space, disk_used = cfuncs.get_filesystem_stats(lg)
     logs_directory_size = cfuncs.get_size_of_directory(lg, '/home/steve/temperature_monitoring/logs')
     log_file_size = cfuncs.get_size_of_file(lg, '/home/steve/temperature_monitoring/log.txt')
@@ -331,6 +332,7 @@ def status():
                             architecture = architecture,
                             oskernel = oskernel,
                             uptime = uptime,
+                            cputemp = cputemp,
                             firmwareversion = firmwareversion,
                             hostname = socket.gethostname(),
                             disk_capacity = total_capacity,

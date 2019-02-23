@@ -226,6 +226,14 @@ def get_all_connected_sensor_ids(caller, db_cursor):
     return sensor_ids
 
 
+def get_cpu_temp(caller):
+    res = os.popen("vcgencmd measure_temp").readline()
+    temp = res.replace("temp=","").replace("'C\n","")
+    temp_str = str(int(float(temp)))
+    write_to_log(caller, "cf:  CPU Temp is " + temp_str)
+    return(temp_str)
+
+
 def get_filesystem_stats(caller):
     write_to_log(caller, "cf: >> get_filesystem_stats()")
     statvfs = os.statvfs('/')
