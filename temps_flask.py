@@ -174,7 +174,7 @@ def check_for_updates():
 
 @app.route("/update_done")
 def update_done():
-    cfuncs.write_to_last_change_file(lg, "Restart after user requested a software  update")
+    cfuncs.write_to_last_change_file(lg, "Restart after user requested a software update")
     os.system("/sbin/shutdown -r 0")
     return ("<html><h2>Software updated!</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
     url_for('home') + ">Reload the home page.....</a></h3></html>")
@@ -352,10 +352,10 @@ def status():
 
 class SettingsUpdateForm(Form):
     new_value0 = IntegerField('Temp Sensor Reading Frequency (s)', validators=[validators.optional(), validators.NumberRange(min=300, max=1800)])
-    new_value1 = BooleanField('Logfile Enabled (setting not used!)', validators=[validators.optional()])
+    new_value1 = BooleanField('Logfile Enabled (setting not working)', validators=[validators.optional()])
     new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Email()])
     new_value3 = BooleanField('Send Start up email', validators=[validators.optional()])
-    new_value4 = IntegerField('Webpage Auto Refresh Time (s)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
+    new_value4 = IntegerField('Web Page Refresh (setting not working)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
 
 @app.route("/utils", methods=['GET', 'POST'])

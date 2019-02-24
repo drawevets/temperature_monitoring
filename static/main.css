@@ -9,8 +9,6 @@ h1, h3, h4, h5, h6 {
 }
 
 h2 {
-  /*color: #191919;*/
-
   font-variant: small-caps;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;
@@ -76,11 +74,9 @@ h3 {
 }
 
 .fa, .fas {
-
     font-weight: 900;
     padding: 0px 5px;
     color: white;
-
 }
 
 .fa-tools,

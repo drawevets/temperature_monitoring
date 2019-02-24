@@ -436,8 +436,8 @@ def do_main():
         if send_start_up_status_email == "True":
             if last_change_string is None:
                 last_change_string = "User restart or other unplanned restart"
-            send_email(email_user, email_passwd, email_recipient_addr,  
-                   "PI Temperature Monitoring Reset/Power Up Alert", 
+            email_title = "PI Temperature Monitoring System (" + socket.gethostname() + "): Reset/Power Up Alert"
+            send_email(email_user, email_passwd, email_recipient_addr, email_title, 
                    "Reset reason:\n\n" + last_change_string + "\n" + 
                    "\nSystem status: \n" + 
                    "\n      Connected WiFi network: " + ssid + "  -  OK\n" + 
