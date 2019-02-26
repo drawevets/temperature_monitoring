@@ -441,6 +441,7 @@ def do_main():
                    "Reset reason:\n\n" + last_change_string + "\n" + 
                    "\nSystem status: \n" + 
                    "\n      Connected WiFi network: " + ssid + "  -  OK\n" + 
+                   "\n      WiFi signal:  Quality " + str(quality) + "%,  Strength " + str(level) + "dBm\n" + 
                    "\n      Initial startup and checking of DB  -  OK\n" + 
                    "\n      Temperature Sensors detected:  "+ str(len(all_sensors_list)) + 
                    "\n\n\nHome page:  http://" + ip_address + "/home\n\n\n\n" + 
