@@ -285,6 +285,7 @@ def shutdown():
 def status():
     sensor_aliases = None
     no_sensors = 0
+    public_ip = None
     
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     if (level <= -100):
@@ -318,6 +319,7 @@ def status():
     now = datetime.datetime.now()
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
     ip_address = cfuncs.get_local_ip_address("web")
+    public_ip = cfuncs.get_public_ip(lg)
     vstring = cfuncs.app_version()
     os, architecture, oskernel, firmwareversion, uptime = cfuncs.get_system_information()
     cputemp = cfuncs.get_cpu_temp(lg)
@@ -342,6 +344,7 @@ def status():
                             logs_size = logs_directory_size,
                             log_file = log_file_size,
                             ip = ip_address,
+                            publicip = public_ip,
                             ssid=ssid,
                             quality=str(quality),
                             level_perc=str(level_perc),

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import platform
 import re
-
+import requests
 import sh
 from sh import git
 import sys
@@ -288,6 +288,27 @@ def get_local_ip_address(caller):
     return ip_address
 
 
+def get_local_ip_address(caller):
+    write_to_log(caller, "cf: >> get_local_ip_address()")
+
+    ip_address = None
+    ps = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        outbytes = subprocess.check_output(('grep', '-A 1', 'wlan0'), stdin=ps.stdout)
+        output = str(outbytes)
+        #print(output)
+        find_start_of_ip = output[output.find('inet ')+5:len(output)]
+        ip_address = find_start_of_ip[0:find_start_of_ip.find(' ')]
+        write_to_log(caller, "cf:   IP Address: " + ip_address)
+        #time.sleep(1)
+    except subprocess.CalledProcessError:
+        # grep did not match any lines
+        write_to_log(caller, "cf: ERROR    No wireless networks connected!!")
+        #time.sleep(5)
+    
+    write_to_log(caller, "cf: << get_local_ip_address()")
+    return ip_address
+
 def get_size_of_directory(caller, directory):
     dir_path = Path(directory)
     sizemb = 0
@@ -314,7 +335,7 @@ def get_size_of_file(caller, file_to_check):
         sizemb = round(int(size)/(1024*1024), 3)
         write_to_log(caller, "   Size of " + file_to_check + " is " + str(sizemb) + "MB")
     return sizemb
-    
+
 
 def get_system_information():
     os = platform.system()
@@ -327,6 +348,13 @@ def get_system_information():
         uptime_string = str(datetime.timedelta(seconds = uptime_seconds))[0:-7]
 
     return os, architecture, oskernel, firmwareversion, uptime_string
+
+def get_public_ip(caller):
+    write_to_log(caller, "cf: >> get_public_ip()")
+    pubip = requests.get('http://ip.42.pl/raw').text
+    write_to_log(caller, "cf:     public_ip is : " + pubip)
+    write_to_log(caller, "cf: << get_public_ip()")
+    return pubip
 
 
 def read_temp(caller, sensor_id):

@@ -147,16 +147,23 @@
                         <td> </td>
                     </tr>
                     <tr>
-                        <td>IP Address</td>
+                        <td>Internal IP Address</td>
                         <td>{{ ip }}</td>
                     </tr>
                     <tr>
                         <td>Device Hostname</td>
                         <td>{{ hostname }}</td>
                     </tr>
+                    <tr>
+                        <td> </td>
+                    </tr>
+                    <tr>
+                        <td>External IP Address</td>
+                        <td>{{ publicip }}</td>
+                    </tr>
                 </tbody>
             </table>
-            </br>
+            </br></br>
             {% if sensors_list %}
                 <h3><i class="fas fa-temperature-low"></i> Temperature Sensors Detected</h3>
                 <table class="table table-bordered table-sm">
