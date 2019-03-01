@@ -7,7 +7,7 @@
             <div class="card bg-info">
                 <div class="card-body text-center">
                     <p class="card-text"><h3><small><b>{{ sensor_name }}</b></small></h3></p>
-                    <p class="card-text"><h1 class="display-2">{{ temp }}</h1></p>
+                    <p class="card-text"><h1 class="display-2">{{ temp }}<small>&#8451</small></h1></p>
                     <p class="card-text">@ {{ time }}</p>
                     <p class="card-text"><small><i>({{ sensor_id }})</i></small></p>
                 </div>
@@ -19,5 +19,6 @@
         </br>                      or</br>
         </br>The system has recently been restarted, please try again......</h3>
     {% endif %}
+    </br></br></br></br></br>
 </div>
 {% endblock content %}
