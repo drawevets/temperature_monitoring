@@ -4,7 +4,7 @@ import common_functions as cfuncs
 import datetime
 import MySQLdb
 import glob
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from wtforms import Form, IntegerField, BooleanField, TextField, TextAreaField, validators, StringField, SubmitField
 import os
 import socket
@@ -28,6 +28,12 @@ class SensorDisplayNameForm(Form):
     new_name1 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
     new_name2 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
     new_name3 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route("/updatesensornames", methods=['GET', 'POST'])
@@ -313,8 +319,9 @@ def status():
             sensor_aliases.append(temp_sensor_alias)
         cursor.close()
         db_conn.close()
-
-    all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
+        all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
+    else:
+        all_sensor_info = None
     
     now = datetime.datetime.now()
     date_and_time = str(now.day) + "/"+ str(now.month).zfill(2) + "/" + str(now.year) + " " + str(now.hour).zfill(2) + ":" + str(now.minute).zfill(2) + ":" + str(now.second).zfill(2)
@@ -618,6 +625,91 @@ def fourhour_chart():
     
     page_title = '4hr Temps'
     chart_title = 'Temperature Readings for the previous 4 hours'
+    return render_template('time_line_chart.html',
+                           version = vstring,
+                           page_heading = '',
+                           title = page_title,
+                           autorefresh_required = True,
+                           temps1 = str(data1).replace('\'', ''), 
+                           temps2 = str(data2).replace('\'', ''), 
+                           temps3 = str(data3).replace('\'', ''), 
+                           series1 = legend1, 
+                           series2 = legend2, 
+                           series3 = legend3,
+                           chart_title = chart_title,
+                           xaxis = xaxis_info)
+
+
+@app.route("/eighthour_chart")
+def eighthour_chart():
+    #                                             Location   DB Name    DB Username   DB Passwd 
+    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+
+    db_temp_readings_table = "TEMP_READINGS"
+    if db_conn is None:
+        return("<html><h1>DB connection failed!</h1></html>")
+
+    cursor = db_conn.cursor()
+    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+
+    if result is None:
+        cursor.close()
+        db_conn.close()
+        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
+
+    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
+    if no_of_sensors == 0:
+        return("<html><h1>No temperature data for today yet!</h1></html>")
+
+    if no_of_sensors != 3:
+        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
+    
+    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
+                             MONTH(TEMP_READINGS.date_added),',',
+                             DAY(TEMP_READINGS.date_added),',',
+                             HOUR(TEMP_READINGS.date_added),',',
+                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
+                      temperature, 
+                      temp_sensor_db_id, 
+                      temp_sensor_alias 
+               FROM temps.TEMP_READINGS 
+               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 8 HOUR)
+               ORDER BY TEMP_READINGS.date_added ASC"""
+
+    cursor.execute(query)
+
+    date = []
+    temps = []
+    data1 = []
+    data2 = []
+    data3 = []
+
+    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
+        if row[2] == sensor_list[0]:
+            legend1 = str(row[3])
+            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[1]:
+            legend2 = str(row[3])
+            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+        if row[2] == sensor_list[2]:
+            legend3 = str(row[3])
+            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
+    
+    cursor.close()
+    db_conn.close()
+    vstring = cfuncs.app_version()
+    
+    eighthoursbefore = datetime.datetime.now() - datetime.timedelta(hours=8)
+    now = datetime.datetime.now()
+    xaxis_info = []
+    xaxis_info.append("new Date(" + str(eighthoursbefore.year) + "," + str(eighthoursbefore.month) + "," + str(eighthoursbefore.day) + "," + str(eighthoursbefore.hour) + "," + str(eighthoursbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
+    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
+    
+    page_title = '8hr Temps'
+    chart_title = 'Temperature Readings for the previous 8 hours'
     return render_template('time_line_chart.html',
                            version = vstring,
                            page_heading = '',
