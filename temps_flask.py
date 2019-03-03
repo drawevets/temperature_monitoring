@@ -23,7 +23,6 @@ app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b9176a'
 #For Chart.js source goto link:
 #https://github.com/chartjs/Chart.js/releases/latest
 
-
 class SensorDisplayNameForm(Form):
     new_name1 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
     new_name2 = TextField('Display Name:', validators=[validators.optional(), validators.Length(min=1, max=20)])
@@ -1054,16 +1053,16 @@ def weekoverview_chart():
     
     cursor.close()
     db_conn.close()
-        
+    vstring = cfuncs.app_version()
     page_title = 'Daily Stats'
     chart_title1 = 'Daily Overview of Temperatures (' + all_sensor_aliases[0] + ')'
     chart_title2 = 'Daily Overview of Temperatures (' + all_sensor_aliases[1] + ')'
     chart_title3 = 'Daily Overview of Temperatures (' + all_sensor_aliases[2] + ')'
     return render_template('weekoverview_chart.html',
-                           version=cfuncs.app_version(),
+                           version=vstring,
                            title=page_title,
                            chart_title1=chart_title1,
-                           autorefresh_required = True,
+                           autorefresh_required = False,
                            date_labels1 = all_dates[0],
                            mins1 = all_min_temps[0],
                            avgs1 = all_avg_temps[0],

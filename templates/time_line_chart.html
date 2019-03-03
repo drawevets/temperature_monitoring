@@ -23,18 +23,18 @@
                     data: {{ temps1 }},
                     fill: false,
                     showLine: true,
-                    lineTension: 0.5,
+                    lineTension: 0.1,
                     backgroundColor: "rgba(75,192,192,0.4)",
                     borderColor: "rgba(75,192,192,1)",
                     borderCapStyle: 'butt',
                     cubicInterpolationMode: 'monotone',
                     pointBorderColor: "rgba(75,192,192,1)",
                     pointBackgroundColor: "#fff",
-                    pointBorderWidth: 2,
+                    pointBorderWidth: 1,
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: "rgba(75,192,192,1)",
                     pointHoverBorderColor: "rgba(220,220,220,1)",
-                    pointHoverBorderWidth: 2,
+                    pointHoverBorderWidth: 1,
                     pointRadius: 0,         //Hide point on line
                     pointHitRadius: 10
                 },
@@ -43,18 +43,18 @@
                     data: {{ temps2 }},
                     fill: false,
                     showLine: true,
-                    lineTension: 0.5,
+                    lineTension: 0.1,
                     backgroundColor: "rgba(225,50,50,0.4)",
                     borderColor: "rgba(200,50,50,1)",
                     borderCapStyle: 'butt',
                     cubicInterpolationMode: 'monotone',
                     pointBorderColor: "rgba(200,50,50,1)",
                     pointBackgroundColor: "#fff",
-                    pointBorderWidth: 2,
+                    pointBorderWidth: 1,
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: "rgba(200,50,50,1)",
                     pointHoverBorderColor: "rgba(220,220,220,1)",
-                    pointHoverBorderWidth: 2,
+                    pointHoverBorderWidth: 1,
                     pointRadius: 0,         //Hide point on line
                     pointHitRadius: 10
                 },
@@ -63,18 +63,18 @@
                     data: {{ temps3 }},
                     fill: false,
                     showLine: true,
-                    lineTension: 0.5,
+                    lineTension: 0.1,
                     backgroundColor: "rgba(50,50,200,0.4)",
                     borderColor: "rgba(50,50,225,1)",
                     borderCapStyle: 'butt',
                     cubicInterpolationMode: 'monotone',
                     pointBorderColor: "rgba(50,50,225,1)",
                     pointBackgroundColor: "#fff",
-                    pointBorderWidth: 2,
+                    pointBorderWidth: 1,
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: "rgba(50,50,200,1)",
                     pointHoverBorderColor: "rgba(220,220,200,1)",
-                    pointHoverBorderWidth: 2,
+                    pointHoverBorderWidth: 1,
                     pointRadius: 0,         //Hide point on line
                     pointHitRadius: 10
                 }]
@@ -197,7 +197,82 @@
         //showLine: true
         });
 
-        function updateScalesDay(chart) {
+        function updateScalesStartYZero(chart) {
+            chart.options.scales = {
+                xAxes: [{
+                    //type: 'time',
+                    distribution: 'linear',
+                    ticks: {
+                        // Convert UNIX time back to something meaningful
+                        callback: function(value, index, values) {
+                                full = new Date(value);
+                                dayval = full.getDate();
+                                dayval = ("0"+dayval).slice(-2); // Pad with leading zero
+                                day = full.getDay(); // Day as a number 0 Sunday - 6 Saturday
+                                month = full.getMonth();
+                                month = ("0"+month).slice(-2); // Pad with leading zero
+                                year = full.getFullYear();
+                                hours = full.getHours();
+                                hours = ("0"+hours).slice(-2); // Pad with leading zero
+                                minutes = full.getMinutes();
+                                minutes = ("0"+minutes).slice(-2); // Pad with leading zero
+                                {% if show_date_only %}
+                                    //return (day + '/' + month + ' ' +hours + ':' + minutes);
+                                    return (dayval + '/' + month);
+                                {% else %}
+                                    return (hours + ':' + minutes);
+                                {% endif %}
+                            },
+                            {% if xaxis %}
+                                min: {{ xaxis[0] }},
+                                max: {{ xaxis[1] }},
+                            {% else %}
+
+                            {% endif %}
+                            padding: 5,
+                            fontSize: 12,
+                            fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 13,
+                        fontStyle: 'normal',
+                        labelString: 'Time'
+                    },
+                    gridLines: {
+                        display: true,
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    ticks: {
+                        beginAtZero: true,
+                        //suggestedMin: 5,
+                        //suggestedMax: 10,
+                        padding: 5,
+                        stepSize: 2,
+                        fontSize: 13,
+                        fontStyle: 'normal'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        fontSize: 14,
+                        fontStyle: 'normal',
+                        labelString: 'Temperature DegC'
+                    },
+                    gridLines: {
+                        tickMarkLength: 5,
+                        //zeroLineWidth: 1,
+                        zeroLineColor: 'rgba(0, 0, 0, 0.75)'
+                    }
+                }]
+            }
+            chart.update();
+        }
+        function updateScalesYAuto(chart) {
             chart.options.scales = {
                 xAxes: [{
                     //type: 'time',
@@ -272,82 +347,15 @@
             }
             chart.update();
         }
-        function updateScalesWeek(chart) {
-            chart.options.scales = {
-                xAxes: [{
-                    //type: 'time',
-                    distribution: 'linear',
-                    ticks: {
-                        // Convert UNIX time back to something meaningful
-                        callback: function(value, index, values) {
-                                full = new Date(value);
-                                dayval = full.getDate();
-                                dayval = ("0"+dayval).slice(-2); // Pad with leading zero
-                                day = full.getDay(); // Day as a number 0 Sunday - 6 Saturday
-                                month = full.getMonth();
-                                month = ("0"+month).slice(-2); // Pad with leading zero
-                                year = full.getFullYear();
-                                hours = full.getHours();
-                                hours = ("0"+hours).slice(-2); // Pad with leading zero
-                                minutes = full.getMinutes();
-                                minutes = ("0"+minutes).slice(-2); // Pad with leading zero
-                                {% if show_date_only %}
-                                    //return (day + '/' + month + ' ' +hours + ':' + minutes);
-                                    return (dayval + '/' + month);
-                                {% else %}
-                                    return (hours + ':' + minutes);
-                                {% endif %}
-                            },
-                            {% if xaxis %}
-                                min: {{ xaxis[0] }},
-                                max: {{ xaxis[1] }},
-                            {% else %}
-
-                            {% endif %}
-                            padding: 5,
-                            fontSize: 12,
-                            fontStyle: 'normal'
-                    },
-                    scaleLabel: {
-                        display: true,
-                        fontSize: 13,
-                        fontStyle: 'normal',
-                        labelString: 'Time'
-                    },
-                    gridLines: {
-                        display: true,
-                        tickMarkLength: 5,
-                        //zeroLineWidth: 1,
-                        zeroLineColor: 'rgba(0, 0, 0, 0.5)'
-                    },
-                }],
-                yAxes: [{
-                    type: 'logarithmic',
-                    ticks: {
-                        beginAtZero: false,
-                        //suggestedMin: 5,
-                        //suggestedMax: 10,
-                        padding: 5,
-                        stepSize: 2,
-                        fontSize: 13,
-                        fontStyle: 'normal'
-                    },
-                    scaleLabel: {
-                        display: true,
-                        fontSize: 14,
-                        fontStyle: 'normal',
-                        labelString: 'Temperature DegC'
-                    },
-                    gridLines: {
-                        tickMarkLength: 5,
-                        //zeroLineWidth: 1,
-                        zeroLineColor: 'rgba(0, 0, 0, 0.75)'
-                    }
-                }]
-            }
-            chart.update();
-        }
     </script>
-    <!-- <input id="Day Button" type="button" value="Test Linear" onClick="updateScalesDay(myChart);"/> -->
-    <!-- <input id="Week Button" type="button" value="Test Log" onClick="updateScalesWeek(myChart);"/> -->
+    <div class="row">
+        <div class="col-md-3">
+        </div>
+        <div class="col-md-4">
+            <input id="YAxisAuto" type="button" value="Y Axis Auto (default)" onClick="updateScalesYAuto(myChart);"/>
+        </div>
+        <div class="col-md-3">
+            <input id="YAxisFromZero" type="button" value="Y Axis from Zero" onClick="updateScalesStartYZero(myChart);"/>
+        </div>
+    </div>
 {% endblock content %}
