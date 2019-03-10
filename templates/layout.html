@@ -27,7 +27,7 @@
     {% endif %}
 </head>
 {% if autorefresh_required %}
-    <body onload = "JavaScript:AutoRefresh(60000);">
+    <body onload = "JavaScript:AutoRefresh(300000);">
 {% else %}
     <body>
 {% endif %}
@@ -83,7 +83,7 @@
                     </br>
                     </br>
                     </br>
-                    <p class="text-muted" style="text-align:right;"><i>This page will auto refresh every 60 seconds.....
+                    <p class="text-muted" style="text-align:right;"><i>This page will auto refresh every 5 minutes.....
                     <input class="refresh-button" type="button" value="Refresh Page Now" onClick="window.location.reload(true)"></i></p>
                 {% endif %}
                 {% if version %}

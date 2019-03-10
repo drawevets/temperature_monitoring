@@ -349,14 +349,62 @@
             }
             chart.update();
         }
+
+        function updateNoLine(chart) {
+
+            chart.data.datasets[0].showLine = false;
+            chart.data.datasets[0].pointRadius = 3;
+            chart.data.datasets[1].showLine = false;
+            chart.data.datasets[1].pointRadius = 3;
+            chart.data.datasets[2].showLine = false;
+            chart.data.datasets[2].pointRadius = 3;
+            chart.update();
+        }
+
+        function updateWithLine(chart) {
+
+            chart.data.datasets[0].showLine = true;
+            chart.data.datasets[0].pointRadius = 0;
+            chart.data.datasets[1].showLine = true;
+            chart.data.datasets[1].pointRadius = 0;
+            chart.data.datasets[2].showLine = true;
+            chart.data.datasets[2].pointRadius = 0;
+            chart.update();
+        }
+
+        function updatePointsOn(chart) {
+            chart.data.datasets[0].pointRadius = 3;
+            chart.data.datasets[1].pointRadius = 3;
+            chart.data.datasets[2].pointRadius = 3;
+            chart.update();
+        }
+
+        function updatePointsOff(chart) {
+            chart.data.datasets[0].pointRadius = 0;
+            chart.data.datasets[1].pointRadius = 0;
+            chart.data.datasets[2].pointRadius = 0;
+            chart.update();
+        }
+
     </script>
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <input id="PointsOnWithLine" type="button" value="Points On" onClick="updatePointsOn(myChart);"/>
         </div>
-        <div class="col-md-4">
-            <input id="YAxisAuto" type="button" value="Y Axis Auto (default)" onClick="updateScalesYAuto(myChart);"/>
+        <div class="col-md-2">
+            <input id="PointsOffWithLine" type="button" value="Points Off" onClick="updatePointsOff(myChart);"/>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <input id="NoLine" type="button" value="Points Only" onClick="updateNoLine(myChart);"/>
+        </div>
+        <div class="col-md-2">
+            <input id="WithLine" type="button" value="Line Only" onClick="updateWithLine(myChart);"/>
+        </div>
+
+        <div class="col-md-2">
+            <input id="YAxisAuto" type="button" value="Y Axis Auto" onClick="updateScalesYAuto(myChart);"/>
+        </div>
+        <div class="col-md-2">
             <input id="YAxisFromZero" type="button" value="Y Axis from Zero" onClick="updateScalesStartYZero(myChart);"/>
         </div>
     </div>
