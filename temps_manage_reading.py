@@ -11,6 +11,9 @@ import MySQLdb
 import RPi.GPIO as GPIO
 import signal
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import socket
 import subprocess
 import sys
@@ -40,6 +43,7 @@ Global_logfile = None
 last_change_string = None
 
 base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the file system
+
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)   #Use GPIO no, NOT pin no
@@ -330,6 +334,82 @@ def send_email(user, pwd, recipient, subject, body):
 
     cfuncs.write_to_log(lg, "<< send_email()")
 
+
+def send_startup_email(user, pwd, send_to, sent_from, subject,last_change_string,ssid,quality,level,all_sensors_list,ip_address):
+    cfuncs.write_to_log(lg, ">> send_startup_email()")
+    print("New email sender, to:" + send_to + "  from:" + sent_from)
+    time.sleep(1)
+
+    # Create message container - the correct MIME type is multipart/alternative.
+    msg = MIMEMultipart('mixed')
+    msg['Subject'] = subject
+    msg['From'] = sent_from
+    msg['To'] = send_to
+
+    if (level <= -100):
+        level_perc = 0
+    elif (level >= -50):
+        level_perc = 100
+    else:
+        level_perc = 2 * (level + 100)
+        
+    html = """\
+    <html>
+        <head>
+            <style> 
+                table, th, td { border: 1px solid black; border-collapse: collapse; }
+                th, td { padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <h2><font color="darkblue">Last reset reason:<font>&nbsp;&nbsp;<font color="green">""" + last_change_string + """<font></h2>
+            <h2><font color="darkblue">System status<font></h2>
+            <table>
+                <tr>
+                    <td><b>Connected WiFi network</b></td>
+                    <td>""" + ssid + """</td>
+                </tr>
+                <tr>
+                    <td><b>WiFi signal Quality</b></td>
+                    <td>""" + str(quality) + """%</td>
+                </tr>
+                <tr>
+                    <td><b>Strength</td>
+                    <td>""" + str(level_perc) + """% (""" + str(level) + """dBm)</b></td>
+                <tr>
+                    <td><b>Initial startup and checking of DB</b></td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td><b>Temperature Sensors detected</td>
+                    <td>"""+ str(len(all_sensors_list)) + """</b></td>
+                </tr>
+            </table>
+            <br>
+            <h3>Pi Temperature Monitoring System home page address:  http://""" + ip_address + """/home</h3>
+            <h3>Bugs and enhancement suggestions can be raised <a href=\"https://github.com/drawevets/temperature_monitoring/issues\">here</a></h3>
+        </body>
+    </html>"""
+
+    msg.attach(MIMEText(html, 'html'))
+    
+    # Send the message via local SMTP server.
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        status = server.ehlo()
+        cfuncs.write_to_log(lg, "       ehlo:  " + str(status))
+        status = server.starttls()
+        cfuncs.write_to_log(lg, "   starttls:  " + str(status))
+        status = server.login(user, pwd)
+        cfuncs.write_to_log(lg, " user login:  " + str(status))
+        server.sendmail(sent_from, send_to, msg.as_string())
+        server.close()
+        cfuncs.write_to_log(lg, " email sent OK")
+    except:
+        cfuncs.write_to_log(lg, "****** failed to send email!!")
+
+    cfuncs.write_to_log(lg, "<< send_startup_email()")
+    
 #############################################################################################################
 
 def do_main():
@@ -436,16 +516,9 @@ def do_main():
         if send_start_up_status_email == "True":
             if last_change_string is None:
                 last_change_string = "User restart or other unplanned restart"
-            email_title = socket.gethostname() + ": PI Temperature Monitoring System (" + socket.gethostname() + "): Reset/Power Up Alert"
-            send_email(email_user, email_passwd, email_recipient_addr, email_title, 
-                   "Last Reset reason:\n\n" + last_change_string + "\n" + 
-                   "\nSystem status: \n" + 
-                   "\n      Connected WiFi network: " + ssid + "  -  OK\n" + 
-                   "\n      WiFi signal:  Quality " + str(quality) + "%,  Strength " + str(level) + "dBm\n" + 
-                   "\n      Initial startup and checking of DB  -  OK\n" + 
-                   "\n      Temperature Sensors detected:  "+ str(len(all_sensors_list)) + 
-                   "\n\n\nHome page:  http://" + ip_address + "/home\n\n\n\n" + 
-                   "Bugs and enhancement suggestions can be raised here: https://github.com/drawevets/temperature_monitoring/issues")
+            email_title = "PI Temperature Monitoring System (" + socket.gethostname() + "): Reset/Power Up Alert"
+            send_startup_email(email_user, email_passwd, gbl_email_recipient_addr, gbl_email_recipient_addr,email_title,
+                               last_change_string,ssid,quality,level,all_sensors_list,ip_address)
     else:
         cfuncs.write_to_log(lg, "***************************  Email credentials not all present, check env variable in /etc/environment!")
         cfuncs.write_to_log(lg, "Email user: " + str(email_user))
