@@ -20,7 +20,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.155 - Last updated: 10/03/19")
+    return ("v0.156 - Last updated: 10/03/19")
 
 
 def check_for_updates(caller):
@@ -157,7 +157,9 @@ def find_all_temp_sensors_connected(caller):
             all_sensors_list.append(sensor_name)
     else:
         write_to_log(caller, "cf:   No Sensors found!")
-        all_sensors_list = None      
+        all_sensors_list = None
+    all_sensors_list.sort()
+    print(all_sensors_list)
     write_to_log(caller, "cf: << find_all_temp_sensors_connected()")
     return all_sensors_list
 
@@ -208,7 +210,7 @@ def find_temp_sensor_id_alias_and_offset(caller, db_conn, db_cursor, sensor_id, 
 
 def get_all_connected_sensor_ids(caller, db_cursor):
     write_to_log(caller, "cf: >> get_all_connected_sensor_ids()")
-    query = "SELECT sensor_id FROM temps.TEMP_SENSORS WHERE connected = '1'"
+    query = "SELECT sensor_id FROM temps.TEMP_SENSORS WHERE connected = '1' ORDER BY temp_sensor_id ASC"
     db_cursor.execute(query)
     sensor_ids = []
     write_to_log(caller, "   Sensors currently connected:")

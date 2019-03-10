@@ -108,7 +108,7 @@ def home():
         cursor = db_conn.cursor()
         
         sensors_connected = cfuncs.get_all_connected_sensor_ids("web", cursor)
-        
+
         reading_dates = []
         temperatures = []
         temp_sensor_aliass = []
