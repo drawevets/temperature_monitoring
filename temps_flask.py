@@ -212,17 +212,16 @@ def cleared_app_settings():
 def clear_temp_readings():
     result = cfuncs.reset_db_table(lg, "TEMP_READINGS")
     if result is False:
-        return redirect(url_for('status'))
+        return redirect(url_for('utils'))
     else:
-        return redirect(url_for('cleared_temp_readings'))
+        return redirect(url_for('home'))
 
 
-@app.route("/cleared_temp_readings")
-def cleared_temp_readings():
-    cfuncs.write_to_last_change_file(lg, "Restart after temp readings cleared")
-    os.system("/sbin/shutdown -r 0")
-    return ("<html><h2>Temperature readings cleared</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + 
-    url_for('home') + ">Reload the home page.....</a></h3></html>")
+#@app.route("/cleared_temp_readings")
+#def cleared_temp_readings():
+#    cfuncs.write_to_last_change_file(lg, "Restart after temp readings cleared")
+#    os.system("/sbin/shutdown -r 0")
+#    return ("<html><h2>Temperature readings cleared</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + url_for('home') + ">Reload the home page.....</a></h3></html>")
 
 
 @app.route("/current_temps")
@@ -264,11 +263,6 @@ def current_temps():
                                         title = 'Current Temps',
                                         autorefresh_required = True,
                                         temp_data = temp_details)
-
-
-@app.route("/edit_sensor_alias")
-def edit_sensor_alias():
-    return "<html><h1>Not implemented yet</h1></br><a href=" + url_for('status') + ">Back to the status page.....</html>"
 
 
 @app.route("/restart_now")
