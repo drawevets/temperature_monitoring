@@ -218,7 +218,8 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
                 ('start_up_email_address', 'not_set'),
                 ('start_up_status_email', 'True'),
                 ('webpage_autorefresh_time', '60'),
-                ('first_read_settle_time', '10')]
+                ('first_read_settle_time', '10'),
+                ('temp_reading_max_age', '2')]
     
     no_of_settings = len(settings)
     settings_added = 0
@@ -471,7 +472,7 @@ def do_main():
             clean_shutdown()
     else:
         cfuncs.write_to_log(lg, "   OK - TEMP_READINGS table exists")
-
+    
     result = cfuncs.check_table_exists(lg, cursor, "TEMP_SENSORS")
     if result is None:
         cfuncs.write_to_log(lg, "*** NO TEMP_SENSORS Table")
@@ -529,7 +530,8 @@ def do_main():
     cfuncs.write_to_log(lg, "Waiting %d seconds for the initial readings" % settle_time)
     time.sleep(settle_time)
 
-    while True:            
+    while True:
+        cfuncs.clear_old_temp_readings(lg, Global_dict['temp_reading_max_age'])
         all_sensors_list = cfuncs.find_all_temp_sensors_connected(lg)
         no_of_sensors = len(all_sensors_list)
         if no_of_sensors == 3:

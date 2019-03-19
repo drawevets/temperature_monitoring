@@ -20,7 +20,7 @@ base_dir = '/sys/bus/w1/devices/'          # Location of 1 wire devices in the f
 log_to_console = True
 
 def app_version():
-    return ("v0.158 - Last updated: 10/03/19")
+    return ("v0.159 - Last updated: 19/03/19")
 
 
 def check_for_updates(caller):
@@ -141,6 +141,27 @@ def clear_log_archive(caller):
         os.system("rm -rf " + logs_dir)
         
     write_to_log(caller, "cf: << clear_log_archive()")
+
+
+def clear_old_temp_readings(caller, max_age):
+    write_to_log(caller, "cf: >> clear_old_temp_readings()")
+    write_to_log(caller, "cf:    clearing readings old than " + max_age + " months")
+
+    #                                          Location     DB Name  DB Username   DB Passwd
+    tmp_db_conn = setup_db_connection(caller, "localhost",  "temps", "temps_admin", "admin",)
+
+    if tmp_db_conn is None:
+        write_to_log(caller, "cf:   DB connection failed!")
+    else:
+        write_to_log(caller, "cf:   DB connection OK")
+        tmp_db_conn_cursor = tmp_db_conn.cursor()
+        sql_cmd = "DELETE FROM TEMP_READINGS WHERE TEMP_READINGS.date_added < (now() - INTERVAL " + max_age + " MONTH)";
+        tmp_db_conn_cursor.execute(sql_cmd)
+        tmp_db_conn.commit()
+        tmp_db_conn_cursor.close()
+        tmp_db_conn.close()
+    
+    write_to_log(caller, "cf: << clear_old_temp_readings()")
 
 
 def find_all_temp_sensors_connected(caller):
@@ -311,6 +332,7 @@ def get_local_ip_address(caller):
     write_to_log(caller, "cf: << get_local_ip_address()")
     return ip_address
 
+
 def get_size_of_directory(caller, directory):
     dir_path = Path(directory)
     sizemb = 0
@@ -350,6 +372,7 @@ def get_system_information():
         uptime_string = str(datetime.timedelta(seconds = uptime_seconds))[0:-7]
 
     return os, architecture, oskernel, firmwareversion, uptime_string
+
 
 def get_public_ip(caller):
     write_to_log(caller, "cf: >> get_public_ip()")
@@ -407,6 +430,20 @@ def read_temp_raw(caller, sensor_id):
     write_to_log(caller, "cf: << read_temp_raw()")
     return lines
 
+
+def get_total_temp_reading_records_count_from_db(caller, db_cursor):
+    count = None
+    
+    write_to_log(caller, "cf: >> get_total_temp_reading_records_count_from_db()")
+    query = "SELECT COUNT(temp_id) FROM TEMP_READINGS"
+    
+    no_rows = db_cursor.execute(query)
+    for row in db_cursor.fetchall():
+        count = str(row[0])
+    
+    write_to_log(caller, "cf: << get_last_temperature_reading_from_db(" + str(count) + ")")
+    return count
+    
 
 def reset_db_table(caller, table_to_reset):
     write_to_log(caller, "cf: >> reset_db_table()")

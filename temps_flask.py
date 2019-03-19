@@ -217,13 +217,6 @@ def clear_temp_readings():
         return redirect(url_for('home'))
 
 
-#@app.route("/cleared_temp_readings")
-#def cleared_temp_readings():
-#    cfuncs.write_to_last_change_file(lg, "Restart after temp readings cleared")
-#    os.system("/sbin/shutdown -r 0")
-#    return ("<html><h2>Temperature readings cleared</h2></br><h2>The system will now restart......</h2></br></br><h3><a href=" + url_for('home') + ">Reload the home page.....</a></h3></html>")
-
-
 @app.route("/current_temps")
 def current_temps():
     vstring = cfuncs.app_version()
@@ -285,6 +278,7 @@ def status():
     sensor_aliases = None
     no_sensors = 0
     public_ip = None
+    record_count = 0
     
     ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
     if (level <= -100):
@@ -310,6 +304,9 @@ def status():
         for sensor_id in all_sensors_list:
             db_id, temp_sensor_alias, temp_offset = cfuncs.find_temp_sensor_id_alias_and_offset(lg, db_conn, cursor, sensor_id, False)
             sensor_aliases.append(temp_sensor_alias)
+            
+        record_count = cfuncs.get_total_temp_reading_records_count_from_db(lg, cursor)
+            
         cursor.close()
         db_conn.close()
         all_sensor_info = list(zip(all_sensors_list, sensor_aliases))
@@ -343,6 +340,7 @@ def status():
                             disk_free_space = free_space,
                             logs_size = logs_directory_size,
                             log_file = log_file_size,
+                            total_records = record_count,
                             ip = ip_address,
                             publicip = public_ip,
                             ssid=ssid,
@@ -355,11 +353,13 @@ def status():
 
 class SettingsUpdateForm(Form):
     new_value0 = IntegerField('Temp Sensor Reading Frequency (s)', validators=[validators.optional(), validators.NumberRange(min=300, max=1800)])
-    new_value1 = BooleanField('Logfile Enabled (setting not working)', validators=[validators.optional()])
+    new_value1 = BooleanField('Logfile Enabled (not implemented yet)', validators=[validators.optional()])
     new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Email()])
     new_value3 = BooleanField('Send Start up email', validators=[validators.optional()])
-    new_value4 = IntegerField('Web Page Refresh (setting not working)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
+    new_value4 = IntegerField('Web Page Refresh (not implemented yet)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
+    new_value6 = IntegerField('Max Time To Keep Temp Readings (months)', validators=[validators.optional(), validators.NumberRange(min=1, max=12)])
+
 
 @app.route("/utils", methods=['GET', 'POST'])
 def utils():
@@ -386,6 +386,7 @@ def utils():
     setting_name.append('start_up_status_email')
     setting_name.append('webpage_autorefresh_time')
     setting_name.append('first_read_settle_time')
+    setting_name.append('temp_reading_max_age')
 
     setting_value.append(settings_dict['sensor_polling_freq'])
     setting_value.append(settings_dict['write_to_logfile'])
@@ -396,6 +397,7 @@ def utils():
     setting_value.append(settings_dict['start_up_status_email'])
     setting_value.append(settings_dict['webpage_autorefresh_time'])
     setting_value.append(settings_dict['first_read_settle_time'])
+    setting_value.append(settings_dict['temp_reading_max_age'])
     
     cursor.close()
     db_conn.close()
@@ -407,7 +409,7 @@ def utils():
         start_up_status_email = str(form.new_value3.data)
         webpage_autorefresh_time = request.form['new_value4'].strip()
         first_read_settle_time = request.form['new_value5']
-
+        temp_reading_max_age = request.form['new_value6']
         #print("sensor_polling_freq: " + sensor_polling_freq)
         #print("write_to_logfile: " + write_to_logfile)
         #print("start_up_email_address: " + start_up_email_address)
@@ -434,6 +436,9 @@ def utils():
                 
             if first_read_settle_time != '':
                 cfuncs.update_setting(lg, 'first_read_settle_time', first_read_settle_time)
+
+            if temp_reading_max_age != '':
+                cfuncs.update_setting(lg, 'temp_reading_max_age', temp_reading_max_age)
 
         else:
             print("Form NOT validated OK")
