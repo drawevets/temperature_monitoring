@@ -359,6 +359,7 @@ class SettingsUpdateForm(Form):
     new_value4 = IntegerField('Web Page Auto-Refresh Time (mins)', validators=[validators.optional(), validators.NumberRange(min=1, max=60)])
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
     new_value6 = IntegerField('Max Time To Keep Temp Readings (months)', validators=[validators.optional(), validators.NumberRange(min=1, max=12)])
+    new_value7 = IntegerField('Line Thickness for Charts', validators=[validators.optional(), validators.NumberRange(min=1, max=10)])
 
 
 @app.route("/utils", methods=['GET', 'POST'])
@@ -387,6 +388,7 @@ def utils():
     setting_name.append('webpage_autorefresh_time')
     setting_name.append('first_read_settle_time')
     setting_name.append('temp_reading_max_age')
+    setting_name.append('line_chart_line_thickness')
 
     setting_value.append(settings_dict['sensor_polling_freq'])
     setting_value.append(settings_dict['write_to_logfile'])
@@ -398,6 +400,7 @@ def utils():
     setting_value.append(settings_dict['webpage_autorefresh_time'])
     setting_value.append(settings_dict['first_read_settle_time'])
     setting_value.append(settings_dict['temp_reading_max_age'])
+    setting_value.append(settings_dict['line_chart_line_thickness'])
     
     cursor.close()
     db_conn.close()
@@ -410,6 +413,7 @@ def utils():
         webpage_autorefresh_time = request.form['new_value4'].strip()
         first_read_settle_time = request.form['new_value5']
         temp_reading_max_age = request.form['new_value6']
+        line_chart_line_thickness = request.form['new_value7']
         #print("sensor_polling_freq: " + sensor_polling_freq)
         #print("write_to_logfile: " + write_to_logfile)
         #print("start_up_email_address: " + start_up_email_address)
@@ -439,6 +443,9 @@ def utils():
 
             if temp_reading_max_age != '':
                 cfuncs.update_setting(lg, 'temp_reading_max_age', temp_reading_max_age)
+                
+            if line_chart_line_thickness != '':
+                cfuncs.update_setting(lg, 'line_chart_line_thickness', line_chart_line_thickness)
 
         else:
             print("Form NOT validated OK")
@@ -481,6 +488,7 @@ def onehour_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -556,7 +564,8 @@ def onehour_chart():
                            series2 = legend2, 
                            series3 = legend3,
                            chart_title = chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/fourhour_chart")
@@ -572,6 +581,7 @@ def fourhour_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -647,7 +657,8 @@ def fourhour_chart():
                            series2 = legend2, 
                            series3 = legend3,
                            chart_title = chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/eighthour_chart")
@@ -663,6 +674,7 @@ def eighthour_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -738,7 +750,8 @@ def eighthour_chart():
                            series2 = legend2, 
                            series3 = legend3,
                            chart_title = chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/today_chart")
@@ -754,6 +767,7 @@ def today_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -829,7 +843,8 @@ def today_chart():
                            series2=legend2, 
                            series3=legend3,
                            chart_title=chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/twentyfourhour_chart")
@@ -845,6 +860,7 @@ def twentyfourhour_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -924,7 +940,8 @@ def twentyfourhour_chart():
                            series2=legend2, 
                            series3=legend3,
                            chart_title=chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/week_chart")
@@ -940,6 +957,7 @@ def week_chart():
     
     settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
     web_refresh_time = settings_dict['webpage_autorefresh_time']
+    line_thickness = settings_dict['line_chart_line_thickness']
     
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
@@ -1020,7 +1038,8 @@ def week_chart():
                            series2 = legend2, 
                            series3 = legend3,
                            chart_title = chart_title,
-                           xaxis = xaxis_info)
+                           xaxis = xaxis_info,
+                           line_thickness = line_thickness)
 
 
 @app.route("/weekoverview_chart")
