@@ -182,8 +182,8 @@ def manage_settings_db_and_dict_stuff(db_conn, db_cursor):
         cfuncs.write_to_log(lg, "   " + str(existing) + " settings already existed")
         cfuncs.write_to_log(lg, "   " + str(added) + " settings added")
 
-    global Global_dict
-    Global_dict = cfuncs.settings_db_to_dictionary(lg, db_cursor)
+    #global Global_dict
+    #Global_dict = cfuncs.settings_db_to_dictionary(lg, db_cursor)
     
     cfuncs.write_to_log(lg, "<< manage_settings_db_stuff()")
     return None
@@ -213,7 +213,7 @@ def create_settings_table(db_conn, db_cursor):
 def check_settings_for_defaults_and_updates(db_conn, db_cursor):
     cfuncs.write_to_log(lg, ">> check_settings_for_defaults_and_updates()")
     
-    settings = [('sensor_polling_freq', '600'),
+    settings = [('sensor_polling_freq', '10'),
                 ('write_to_logfile', 'True'),
                 ('start_up_email_address', 'not_set'),
                 ('start_up_status_email', 'True'),
@@ -464,7 +464,8 @@ def do_main():
     safe_to_unplug(False)
     
     manage_settings_db_and_dict_stuff(db_conn, cursor)
-
+    Global_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    
     result = cfuncs.check_table_exists(lg, cursor, "TEMP_READINGS")
     if result is None:
         cfuncs.write_to_log(lg, "*** NO TEMP_READINGS Table")
@@ -552,22 +553,29 @@ def do_main():
             else:
                 cfuncs.write_to_log(lg, "***No info for sensor " + sensor_name + ", ignoring! Temp is " + str(read_temp(sensor_name)))
         loop_time = int(Global_dict['sensor_polling_freq'])
-        cfuncs.write_to_log(lg, "The next reading will be taken in " + str(int(round(loop_time / 60, 0))) + " minutes")
+        cfuncs.write_to_log(lg, "The next reading will be taken in " + str(loop_time) + " minutes")
         safe_to_unplug(True)
         
         net_checking_count = 10
-        net_checking_loop_time = (loop_time / net_checking_count)
-        for count in range(0,net_checking_count-1):
+        net_checking_loop_time = ((loop_time*60) / net_checking_count)
+        for count in range(0,net_checking_count):
             cfuncs.write_to_log(lg, "In network monitor loop(" + str(count) + ") before resampling temps again")
             ssid, quality, level = cfuncs.check_wireless_network_connection(lg)
             if ssid != '':
                 network_status(True)
             else:
                 network_status(False)
-            time.sleep(net_checking_loop_time)
+                
+            Global_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+            new_loop_time = int(Global_dict['sensor_polling_freq'])
+            if loop_time != new_loop_time:
+                cfuncs.write_to_log(lg, "sensor_polling_freq - changed from "+str(loop_time)+"mins, to "+str(new_loop_time)+"mins.....")
+                break;                
+            time.sleep(net_checking_loop_time) # Time in seconds
             
-        cfuncs.write_to_log(lg, "Exited network monitor loop, one for sleep before resampling temps again")    
-        time.sleep(net_checking_loop_time)
+        cfuncs.write_to_log(lg, "Exited network monitor loop.....")    
+        #cfuncs.write_to_log(lg, "Exited network monitor loop, one for sleep before resampling temps again")    
+        #time.sleep(net_checking_loop_time)
 
 ########################################################################################################
 

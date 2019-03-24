@@ -352,11 +352,11 @@ def status():
 
 
 class SettingsUpdateForm(Form):
-    new_value0 = IntegerField('Temp Sensor Reading Frequency (s)', validators=[validators.optional(), validators.NumberRange(min=300, max=1800)])
+    new_value0 = IntegerField('Temp Sensor Reading Frequency (mins)', validators=[validators.optional(), validators.NumberRange(min=1, max=60)])
     new_value1 = BooleanField('Logfile Enabled (not implemented yet)', validators=[validators.optional()])
     new_value2 = TextField('Power Up Email Recipient', validators=[validators.optional(), validators.Email()])
-    new_value3 = BooleanField('Send Start up email', validators=[validators.optional()])
-    new_value4 = IntegerField('Web Page Refresh (not implemented yet)', validators=[validators.optional(), validators.NumberRange(min=30, max=1800)])
+    new_value3 = BooleanField('Send Start Up Email', validators=[validators.optional()])
+    new_value4 = IntegerField('Web Page Auto-Refresh Time (mins)', validators=[validators.optional(), validators.NumberRange(min=1, max=60)])
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
     new_value6 = IntegerField('Max Time To Keep Temp Readings (months)', validators=[validators.optional(), validators.NumberRange(min=1, max=12)])
 
@@ -471,14 +471,19 @@ def utils():
 @app.route("/onehour_chart")
 def onehour_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -543,6 +548,7 @@ def onehour_chart():
                            page_heading = '',
                            title = page_title,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -556,14 +562,19 @@ def onehour_chart():
 @app.route("/fourhour_chart")
 def fourhour_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -628,6 +639,7 @@ def fourhour_chart():
                            page_heading = '',
                            title = page_title,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -641,14 +653,19 @@ def fourhour_chart():
 @app.route("/eighthour_chart")
 def eighthour_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -713,6 +730,7 @@ def eighthour_chart():
                            page_heading = '',
                            title = page_title,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 
@@ -726,14 +744,19 @@ def eighthour_chart():
 @app.route("/today_chart")
 def today_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -798,6 +821,7 @@ def today_chart():
                            page_heading = '',
                            title=page_title,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1=str(data1).replace('\'', ''), 
                            temps2=str(data2).replace('\'', ''), 
                            temps3=str(data3).replace('\'', ''), 
@@ -811,14 +835,19 @@ def today_chart():
 @app.route("/twentyfourhour_chart")
 def twentyfourhour_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -887,6 +916,7 @@ def twentyfourhour_chart():
                            page_heading = '',
                            title=page_title,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1=str(data1).replace('\'', ''), 
                            temps2=str(data2).replace('\'', ''), 
                            temps3=str(data3).replace('\'', ''), 
@@ -900,14 +930,19 @@ def twentyfourhour_chart():
 @app.route("/week_chart")
 def week_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection("web", "localhost", "temps", "temps_reader", "reader")
+    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
-    db_temp_readings_table = "TEMP_READINGS"
+    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
     if db_conn is None:
-        return("<html><h1>DB connection failed!</h1></html>")
+        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
 
     cursor = db_conn.cursor()
-    result = cfuncs.check_table_exists("web", cursor, db_temp_readings_table)
+    
+    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
+    web_refresh_time = settings_dict['webpage_autorefresh_time']
+    
+    db_temp_readings_table = "TEMP_READINGS"
+    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
     if result is None:
         cursor.close()
@@ -977,6 +1012,7 @@ def week_chart():
                            title = page_title,
                            show_date_only = True,
                            autorefresh_required = True,
+                           refresh_time = web_refresh_time,
                            temps1 = str(data1).replace('\'', ''), 
                            temps2 = str(data2).replace('\'', ''), 
                            temps3 = str(data3).replace('\'', ''), 

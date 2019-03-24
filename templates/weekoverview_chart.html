@@ -20,34 +20,35 @@
                 labels : [{% for label in date_labels1 %}
                               "{{label}}",
                           {% endfor %}],
-                datasets : [{
+                datasets : [
+                    {
+                        label: 'Avg',
+                        type: "line",
+                        borderColor: "#3cba9f",
+                        borderWidth: 3,
+                        fill: false,
+                        data: {{ avgs1 }}
+                    },
+                    {
                     label: 'Min',
                     backgroundColor: "#3e95cd",
                     borderColor: "#000",
                     borderWidth: 2,
                     data: {{ mins1 }}
-                },
-                {
-                    label: 'Avg',
-                    type: "line",
-                    borderColor: "#3cba9f",
-                    borderWidth: 4,
-                    fill: false,
-                    data: {{ avgs1 }}
-                },
-                {
-                    label: 'Max',
-                    backgroundColor: "#c45850",
-                    borderColor: "#000",
-                    borderWidth: 2,
-                    data: {{ maxs1 }}
-                }]
-            },
+                    },
+                    {
+                        label: 'Max',
+                        backgroundColor: "#c45850",
+                        borderColor: "#000",
+                        borderWidth: 2,
+                        data: {{ maxs1 }}
+                    }]
+                   },
             options: {
                 title: {
                     display: true,
                     position: 'top',
-                    fontSize: 36,
+                    fontSize: 30,
                     fontStyle: 'normal',
                     fontColor: '#020370',
                     padding: 10,

@@ -483,6 +483,7 @@ def setup_db_connection(caller, host, db, user, passwd):
     
     try:
         db = MySQLdb.connect(host, user, passwd, db)
+        db.autocommit(True)
     except:
         write_to_log(caller, "***Database connection failed!")
         db = None

@@ -102,7 +102,7 @@ CREATE USER 'temps_admin'@'localhost' IDENTIFIED BY 'admin';
 
 GRANT SELECT, INSERT, UPDATE, CREATE ON temps.* TO 'temps_user'@'localhost' identified by 'user';
 GRANT SELECT ON temps.* TO 'temps_reader'@'localhost' identified by 'reader';
-GRANT SELECT, INSERT, UPDATE, CREATE, DROP ON temps.* TO 'temps_admin'@'localhost' identified by 'admin';
+GRANT SELECT, INSERT, UPDATE, CREATE, DELETE, DROP ON temps.* TO 'temps_admin'@'localhost' identified by 'admin';
 COMMIT;
 
 
