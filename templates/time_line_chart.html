@@ -147,6 +147,8 @@
                         gridLines: {
                             tickMarkLength: 5,
                             //zeroLineWidth: 1,
+                            lineWidth: 1,
+                            drawBorder: false,
                             zeroLineColor: 'rgba(0, 0, 0, 0.75)'
                         }
                     }],
@@ -167,8 +169,9 @@
                                     hours = ("0"+hours).slice(-2); // Pad with leading zero
                                     minutes = full.getMinutes();
                                     minutes = ("0"+minutes).slice(-2); // Pad with leading zero
-                                    {% if show_date_only %}
+                                    {% if date_only %}
                                         //return (day + '/' + month + ' ' +hours + ':' + minutes);
+                                        //return (dayval + '/' + month + ' ' + hours + ':' + minutes);
                                         return (dayval + '/' + month);
                                     {% else %}
                                         return (hours + ':' + minutes);
@@ -194,6 +197,8 @@
                             display: true,
                             tickMarkLength: 5,
                             //zeroLineWidth: 1,
+                            lineWidth: 1,
+                            drawBorder: false,
                             zeroLineColor: 'rgba(0, 0, 0, 0.5)'
                         },
                     }]

@@ -220,7 +220,8 @@ def check_settings_for_defaults_and_updates(db_conn, db_cursor):
                 ('webpage_autorefresh_time', '5'),
                 ('first_read_settle_time', '10'),
                 ('temp_reading_max_age', '2'),
-                ('line_chart_line_thickness', '2')]
+                ('line_chart_line_thickness', '2'),
+                ('user_period_line_chart','8')]
     
     no_of_settings = len(settings)
     settings_added = 0

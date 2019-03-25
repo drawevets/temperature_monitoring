@@ -360,7 +360,7 @@ class SettingsUpdateForm(Form):
     new_value5 = IntegerField('First Temp Read Settle Time (s)', validators=[validators.optional(), validators.NumberRange(min=1, max=30)])
     new_value6 = IntegerField('Max Time To Keep Temp Readings (months)', validators=[validators.optional(), validators.NumberRange(min=1, max=12)])
     new_value7 = IntegerField('Line Thickness for Charts', validators=[validators.optional(), validators.NumberRange(min=1, max=10)])
-
+    new_value8 = IntegerField('Time Period for "User" Chart (hours)', validators=[validators.optional(), validators.NumberRange(min=1, max=672)])
 
 @app.route("/utils", methods=['GET', 'POST'])
 def utils():
@@ -389,6 +389,7 @@ def utils():
     setting_name.append('first_read_settle_time')
     setting_name.append('temp_reading_max_age')
     setting_name.append('line_chart_line_thickness')
+    setting_name.append('user_period_line_chart')
 
     setting_value.append(settings_dict['sensor_polling_freq'])
     setting_value.append(settings_dict['write_to_logfile'])
@@ -401,6 +402,7 @@ def utils():
     setting_value.append(settings_dict['first_read_settle_time'])
     setting_value.append(settings_dict['temp_reading_max_age'])
     setting_value.append(settings_dict['line_chart_line_thickness'])
+    setting_value.append(settings_dict['user_period_line_chart'])
     
     cursor.close()
     db_conn.close()
@@ -414,12 +416,7 @@ def utils():
         first_read_settle_time = request.form['new_value5']
         temp_reading_max_age = request.form['new_value6']
         line_chart_line_thickness = request.form['new_value7']
-        #print("sensor_polling_freq: " + sensor_polling_freq)
-        #print("write_to_logfile: " + write_to_logfile)
-        #print("start_up_email_address: " + start_up_email_address)
-        #print("start_up_status_email: " + start_up_status_email)
-        #print("webpage_autorefresh_time: " + webpage_autorefresh_time)
-        #print("first_read_settle_time: " + first_read_settle_time)
+        user_period_line_chart = request.form['new_value8']
        
         if form.validate():
             cfuncs.write_to_log(lg, "   Form validated OK")
@@ -446,6 +443,9 @@ def utils():
                 
             if line_chart_line_thickness != '':
                 cfuncs.update_setting(lg, 'line_chart_line_thickness', line_chart_line_thickness)
+
+            if user_period_line_chart != '':
+                cfuncs.update_setting(lg, 'user_period_line_chart', user_period_line_chart)
 
         else:
             print("Form NOT validated OK")
@@ -475,8 +475,8 @@ def utils():
                                 tmp1 = temp1, tmp3 = temp3)
 
 
-@app.route("/onehour_chart")
-def onehour_chart():
+@app.route("/timeline_chart")
+def timeline_chart():
     #                                             Location   DB Name    DB Username   DB Passwd 
     db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
 
@@ -490,6 +490,12 @@ def onehour_chart():
     web_refresh_time = settings_dict['webpage_autorefresh_time']
     line_thickness = settings_dict['line_chart_line_thickness']
     
+    requested_period_hours = request.args.get('hours', None)
+    if requested_period_hours == 'User':
+        requested_period_hours = settings_dict['user_period_line_chart']
+    if int(requested_period_hours) < 1:
+        return("<html><h1>Invalid number of hours requested!</h1></html>")
+        
     db_temp_readings_table = "TEMP_READINGS"
     result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
 
@@ -515,7 +521,7 @@ def onehour_chart():
                       temp_sensor_alias 
                FROM temps.TEMP_READINGS 
                JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 HOUR)
+               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL """ + requested_period_hours + """ HOUR)
                ORDER BY TEMP_READINGS.date_added ASC"""
 
     cursor.execute(query)
@@ -541,16 +547,45 @@ def onehour_chart():
     db_conn.close()
     vstring = cfuncs.app_version()
     
-    fourhoursbefore = datetime.datetime.now() - datetime.timedelta(hours=1)
+    xhoursbefore = datetime.datetime.now() - datetime.timedelta(hours=int(requested_period_hours))
     now = datetime.datetime.now()
     xaxis_info = []
-    xaxis_info.append("new Date(" + str(fourhoursbefore.year) + "," + str(fourhoursbefore.month) + "," + str(fourhoursbefore.day) + "," + str(fourhoursbefore.hour) + "," + str(fourhoursbefore.minute) + ")")
+    xaxis_info.append("new Date(" + str(xhoursbefore.year) + "," + str(xhoursbefore.month) + "," + str(xhoursbefore.day) + "," + str(xhoursbefore.hour) + "," + str(xhoursbefore.minute) + ")")
     xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
-    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
     
-    page_title = '1hr Temps'
-    chart_title = 'Temperature Readings for the previous hour'
+    date_only = False
+    
+    if int(requested_period_hours) > 48:
+        date_only = True
+        
+    if int(requested_period_hours) == 1 * 24:
+        chart_title = 'Temperature Readings for the previous Day'
+        page_title = '1 Day Temps'
+    elif int(requested_period_hours) == 2 * 24:
+        chart_title = 'Temperature Readings for the previous 2 Days'
+        page_title = '2 Days Temps'
+    elif int(requested_period_hours) == 3 * 24:
+        chart_title = 'Temperature Readings for the previous 3 Days'
+        page_title = '3 Days Temps'
+    elif int(requested_period_hours) == 4 * 24:
+        chart_title = 'Temperature Readings for the previous 4 Days'
+        page_title = '4 Days Temps'
+    elif int(requested_period_hours) == 5 * 24:
+        chart_title = 'Temperature Readings for the previous 5 Days'
+        page_title = '5 Days Temps'
+    elif int(requested_period_hours) == 6 * 24:
+        chart_title = 'Temperature Readings for the previous 6 Days'
+        page_title = '6 Days Temps'
+    elif int(requested_period_hours) == 7 * 24:
+        chart_title = 'Temperature Readings for the previous Week'
+        page_title = '1 Week Temps'
+    elif int(requested_period_hours) > 1:
+        chart_title = 'Temperature Readings for the previous ' + requested_period_hours + ' hours'
+        page_title = requested_period_hours + 'hrs Temps'
+    else:
+        chart_title = 'Temperature Readings for the previous ' + requested_period_hours + ' hour'
+        page_title = requested_period_hours + 'hr Temps'
+        
     return render_template('time_line_chart.html',
                            version = vstring,
                            page_heading = '',
@@ -565,192 +600,7 @@ def onehour_chart():
                            series3 = legend3,
                            chart_title = chart_title,
                            xaxis = xaxis_info,
-                           line_thickness = line_thickness)
-
-
-@app.route("/fourhour_chart")
-def fourhour_chart():
-    #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
-
-    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
-    if db_conn is None:
-        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
-
-    cursor = db_conn.cursor()
-    
-    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
-    web_refresh_time = settings_dict['webpage_autorefresh_time']
-    line_thickness = settings_dict['line_chart_line_thickness']
-    
-    db_temp_readings_table = "TEMP_READINGS"
-    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
-
-    if result is None:
-        cursor.close()
-        db_conn.close()
-        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
-
-    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
-    if no_of_sensors == 0:
-        return("<html><h1>No temperature data for today yet!</h1></html>")
-
-    if no_of_sensors != 3:
-        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    
-    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
-                             MONTH(TEMP_READINGS.date_added),',',
-                             DAY(TEMP_READINGS.date_added),',',
-                             HOUR(TEMP_READINGS.date_added),',',
-                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
-                      temperature, 
-                      temp_sensor_db_id, 
-                      temp_sensor_alias 
-               FROM temps.TEMP_READINGS 
-               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 4 HOUR)
-               ORDER BY TEMP_READINGS.date_added ASC"""
-
-    cursor.execute(query)
-
-    date = []
-    temps = []
-    data1 = []
-    data2 = []
-    data3 = []
-
-    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == sensor_list[0]:
-            legend1 = str(row[3])
-            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[1]:
-            legend2 = str(row[3])
-            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[2]:
-            legend3 = str(row[3])
-            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-    
-    cursor.close()
-    db_conn.close()
-    vstring = cfuncs.app_version()
-    
-    fourhoursbefore = datetime.datetime.now() - datetime.timedelta(hours=4)
-    now = datetime.datetime.now()
-    xaxis_info = []
-    xaxis_info.append("new Date(" + str(fourhoursbefore.year) + "," + str(fourhoursbefore.month) + "," + str(fourhoursbefore.day) + "," + str(fourhoursbefore.hour) + "," + str(fourhoursbefore.minute) + ")")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
-    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    
-    page_title = '4hr Temps'
-    chart_title = 'Temperature Readings for the previous 4 hours'
-    return render_template('time_line_chart.html',
-                           version = vstring,
-                           page_heading = '',
-                           title = page_title,
-                           autorefresh_required = True,
-                           refresh_time = web_refresh_time,
-                           temps1 = str(data1).replace('\'', ''), 
-                           temps2 = str(data2).replace('\'', ''), 
-                           temps3 = str(data3).replace('\'', ''), 
-                           series1 = legend1, 
-                           series2 = legend2, 
-                           series3 = legend3,
-                           chart_title = chart_title,
-                           xaxis = xaxis_info,
-                           line_thickness = line_thickness)
-
-
-@app.route("/eighthour_chart")
-def eighthour_chart():
-    #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
-
-    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
-    if db_conn is None:
-        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
-
-    cursor = db_conn.cursor()
-    
-    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
-    web_refresh_time = settings_dict['webpage_autorefresh_time']
-    line_thickness = settings_dict['line_chart_line_thickness']
-    
-    db_temp_readings_table = "TEMP_READINGS"
-    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
-
-    if result is None:
-        cursor.close()
-        db_conn.close()
-        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
-
-    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
-    if no_of_sensors == 0:
-        return("<html><h1>No temperature data for today yet!</h1></html>")
-
-    if no_of_sensors != 3:
-        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    
-    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
-                             MONTH(TEMP_READINGS.date_added),',',
-                             DAY(TEMP_READINGS.date_added),',',
-                             HOUR(TEMP_READINGS.date_added),',',
-                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
-                      temperature, 
-                      temp_sensor_db_id, 
-                      temp_sensor_alias 
-               FROM temps.TEMP_READINGS 
-               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 8 HOUR)
-               ORDER BY TEMP_READINGS.date_added ASC"""
-
-    cursor.execute(query)
-
-    date = []
-    temps = []
-    data1 = []
-    data2 = []
-    data3 = []
-
-    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == sensor_list[0]:
-            legend1 = str(row[3])
-            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[1]:
-            legend2 = str(row[3])
-            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[2]:
-            legend3 = str(row[3])
-            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-    
-    cursor.close()
-    db_conn.close()
-    vstring = cfuncs.app_version()
-    
-    eighthoursbefore = datetime.datetime.now() - datetime.timedelta(hours=8)
-    now = datetime.datetime.now()
-    xaxis_info = []
-    xaxis_info.append("new Date(" + str(eighthoursbefore.year) + "," + str(eighthoursbefore.month) + "," + str(eighthoursbefore.day) + "," + str(eighthoursbefore.hour) + "," + str(eighthoursbefore.minute) + ")")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
-    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    
-    page_title = '8hr Temps'
-    chart_title = 'Temperature Readings for the previous 8 hours'
-    return render_template('time_line_chart.html',
-                           version = vstring,
-                           page_heading = '',
-                           title = page_title,
-                           autorefresh_required = True,
-                           refresh_time = web_refresh_time,
-                           temps1 = str(data1).replace('\'', ''), 
-                           temps2 = str(data2).replace('\'', ''), 
-                           temps3 = str(data3).replace('\'', ''), 
-                           series1 = legend1, 
-                           series2 = legend2, 
-                           series3 = legend3,
-                           chart_title = chart_title,
-                           xaxis = xaxis_info,
+                           date_only = date_only,
                            line_thickness = line_thickness)
 
 
@@ -843,201 +693,6 @@ def today_chart():
                            series2=legend2, 
                            series3=legend3,
                            chart_title=chart_title,
-                           xaxis = xaxis_info,
-                           line_thickness = line_thickness)
-
-
-@app.route("/twentyfourhour_chart")
-def twentyfourhour_chart():
-    #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
-
-    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
-    if db_conn is None:
-        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
-
-    cursor = db_conn.cursor()
-    
-    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
-    web_refresh_time = settings_dict['webpage_autorefresh_time']
-    line_thickness = settings_dict['line_chart_line_thickness']
-    
-    db_temp_readings_table = "TEMP_READINGS"
-    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
-
-    if result is None:
-        cursor.close()
-        db_conn.close()
-        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
-
-    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
-    if no_of_sensors == 0:
-        return("<html><h1>No temperature data for today yet!</h1></html>")
-
-    if no_of_sensors != 3:
-        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    
-    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
-                             MONTH(TEMP_READINGS.date_added),',',
-                             DAY(TEMP_READINGS.date_added),',',
-                             HOUR(TEMP_READINGS.date_added),',',
-                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
-                      temperature, 
-                      temp_sensor_db_id, 
-                      temp_sensor_alias 
-               FROM temps.TEMP_READINGS 
-               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 DAY)
-               ORDER BY TEMP_READINGS.date_added ASC"""
-
-    cursor.execute(query)
-
-    date = []
-    temps = []
-    data1 = []
-    data2 = []
-    data3 = []
-
-    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == sensor_list[0]:
-            legend1 = str(row[3])
-            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[1]:
-            legend2 = str(row[3])
-            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[2]:
-            legend3 = str(row[3])
-            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-    
-    #formatted_data = str(data1).replace('\'', '')
-    #print(formatted_data)
-    #print(data1)
-    
-    cursor.close()
-    db_conn.close()
-    vstring = cfuncs.app_version()
-    
-    twenty4hoursbefore = datetime.datetime.now() - datetime.timedelta(days=1)
-    now = datetime.datetime.now()
-    xaxis_info = []
-    xaxis_info.append("new Date(" + str(twenty4hoursbefore.year) + "," + str(twenty4hoursbefore.month) + "," + str(twenty4hoursbefore.day) + "," + str(twenty4hoursbefore.hour) + "," + str(twenty4hoursbefore.minute) + ")")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    print("XAxis Min:  new Date(" + str(twenty4hoursbefore.year) + "," + str(twenty4hoursbefore.month) + "," + str(twenty4hoursbefore.day) + "," + str(twenty4hoursbefore.hour) + "," + str(twenty4hoursbefore.minute) + ")")
-    print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    
-    page_title = '24hr Temps'
-    chart_title = 'Temperature Readings for the last 24 hours'
-    return render_template('time_line_chart.html',
-                           version=vstring,
-                           page_heading = '',
-                           title=page_title,
-                           autorefresh_required = True,
-                           refresh_time = web_refresh_time,
-                           temps1=str(data1).replace('\'', ''), 
-                           temps2=str(data2).replace('\'', ''), 
-                           temps3=str(data3).replace('\'', ''), 
-                           series1=legend1, 
-                           series2=legend2, 
-                           series3=legend3,
-                           chart_title=chart_title,
-                           xaxis = xaxis_info,
-                           line_thickness = line_thickness)
-
-
-@app.route("/week_chart")
-def week_chart():
-    #                                             Location   DB Name    DB Username   DB Passwd 
-    db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_reader", "reader")
-
-    #db_conn = cfuncs.setup_db_connection(lg, "localhost", "temps", "temps_user", "user")
-    if db_conn is None:
-        return("<html><h1>ERROR  - DB connection failed!</h1></html>")
-
-    cursor = db_conn.cursor()
-    
-    settings_dict = cfuncs.settings_db_to_dictionary(lg, cursor)
-    web_refresh_time = settings_dict['webpage_autorefresh_time']
-    line_thickness = settings_dict['line_chart_line_thickness']
-    
-    db_temp_readings_table = "TEMP_READINGS"
-    result = cfuncs.check_table_exists(lg, cursor, db_temp_readings_table)
-
-    if result is None:
-        cursor.close()
-        db_conn.close()
-        return("<html><h1>TEMP_READINGS DB table does not exist!</h1></html>")
-
-    no_of_sensors, sensor_list = get_no_of_sensors_and_sensor_id_in_db(cursor)
-    if no_of_sensors == 0:
-        return("<html><h1>No temperature data for today yet!</h1></html>")
-
-    if no_of_sensors != 3:
-        return("<html><h1>Data for %d sensors found</h1><h1>Charting only works for 3 sensors currently!</h1></html>" % no_of_sensors)
-    
-    query = """SELECT CONCAT(YEAR(TEMP_READINGS.date_added),',',
-                             MONTH(TEMP_READINGS.date_added),',',
-                             DAY(TEMP_READINGS.date_added),',',
-                             HOUR(TEMP_READINGS.date_added),',',
-                             MINUTE(TEMP_READINGS.date_added)) as time_added, 
-                      temperature, 
-                      temp_sensor_db_id, 
-                      temp_sensor_alias 
-               FROM temps.TEMP_READINGS 
-               JOIN TEMP_SENSORS ON temp_sensor_db_id = TEMP_SENSORS.sensor_id
-               WHERE TEMP_READINGS.date_added >= (now() - INTERVAL 1 WEEK)
-               ORDER BY TEMP_READINGS.date_added ASC"""
-
-    cursor.execute(query)
-
-    date = []
-    temps = []
-    data1 = []
-    data2 = []
-    data3 = []
-
-    for row in cursor.fetchall():  #row[0]:date, row[1]:temp, row[2]:sensor_id, row[3]:sensor_name
-        if row[2] == sensor_list[0]:
-            legend1 = str(row[3])
-            data1.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[1]:
-            legend2 = str(row[3])
-            data2.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-        if row[2] == sensor_list[2]:
-            legend3 = str(row[3])
-            data3.append("{x: new Date(" + row[0] + "), y: " + str(row[1]) +"}")
-    
-    #formatted_data = str(data1).replace('\'', '')
-    #print(formatted_data)
-    #print(data1)
-    
-    cursor.close()
-    db_conn.close()
-    vstring = cfuncs.app_version()
-    
-    sevendaysbefore = datetime.datetime.now() - datetime.timedelta(days=7)
-    now = datetime.datetime.now()
-    xaxis_info = []
-    xaxis_info.append("new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
-    xaxis_info.append("new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    #print("XAxis Min:  new Date(" + str(sevendaysbefore.year) + "," + str(sevendaysbefore.month) + "," + str(sevendaysbefore.day) + "," + str(sevendaysbefore.hour) + "," + str(sevendaysbefore.minute) + ")")
-    #print("XAxis Max:  new Date(" + str(now.year) + "," + str(now.month) + "," + str(now.day) + "," + str(now.hour) + "," + str(now.minute) + ")")
-    
-    page_title = 'Week Temps'
-    chart_title = 'Temperature Readings for the previous week'
-    return render_template('time_line_chart.html',
-                           version = vstring,
-                           page_heading = '',
-                           title = page_title,
-                           show_date_only = True,
-                           autorefresh_required = True,
-                           refresh_time = web_refresh_time,
-                           temps1 = str(data1).replace('\'', ''), 
-                           temps2 = str(data2).replace('\'', ''), 
-                           temps3 = str(data3).replace('\'', ''), 
-                           series1 = legend1, 
-                           series2 = legend2, 
-                           series3 = legend3,
-                           chart_title = chart_title,
                            xaxis = xaxis_info,
                            line_thickness = line_thickness)
 
